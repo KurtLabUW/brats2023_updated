@@ -36,6 +36,11 @@ class BratsDataset(Dataset):
         affine, header = modality_nifti.affine, modality_nifti.header
         extra_info = (case_info, affine, header)
 
+        print(type(modalities_data), type(modalities_data[0]))
+        print(type(affine))
+        print(type(header))
+        print(type(extra_info))
+
         if self.mode == 'train':
             seg_nifti = self.load_nifti(subject_name, 'seg')
             seg_data = seg_nifti.get_fdata()

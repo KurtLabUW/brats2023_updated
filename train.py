@@ -32,7 +32,6 @@ def main():
                                               ])
     train_set = datasets.BratsDataset(data_dir, transforms=train_composed, mode='train')
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-
     
 
     for epoch in range(epoch_start, max_epoch+1):
@@ -40,4 +39,10 @@ def main():
 
         for imgs, seg, info in train_loader:
 
+            # Put model in train mode.
             model.train()
+
+            # Move data to GPU.
+            imgs, seg = imgs.cuda(), seg.cuda()
+
+            # Prepare segmentation in right way            
