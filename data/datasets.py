@@ -32,30 +32,21 @@ class BratsDataset(Dataset):
             modality_data = modality_nifti.get_fdata()
             modalities_data.append(modality_data)
 
-        case_info = subject_name.split('-', maxsplit=2)[-1]
-        affine, header = modality_nifti.affine, modality_nifti.header
-        extra_info = (case_info, affine, header)
-
-        print(type(modalities_data), type(modalities_data[0]))
-        print(type(affine))
-        print(type(header))
-        print(type(extra_info))
-
         if self.mode == 'train':
             seg_nifti = self.load_nifti(subject_name, 'seg')
             seg_data = seg_nifti.get_fdata()
-            return modalities_data, seg_data, extra_info
+            return modalities_data, seg_data
         elif self.mode == 'test':
-            return modalities_data, extra_info
+            return modalities_data
     
     def __getitem__(self, idx):
         subject_name = self.subject_list[idx]
 
         # Load the data and extra info.
         if self.mode == 'train':
-            imgs, seg, extra_info = self.load_subject_data(subject_name)
+            imgs, seg = self.load_subject_data(subject_name)
         elif self.mode == 'test':
-            imgs, extra_info = self.load_subject_data(subject_name)
+            imgs = self.load_subject_data(subject_name)
 
         # Do Z-score norm and rescaling preprocessing.
         imgs = [znorm_rescale(img) for img in imgs]
@@ -75,7 +66,7 @@ class BratsDataset(Dataset):
             seg = np.ascontiguousarray(seg)
             seg = torch.from_numpy(seg)
 
-            return imgs, seg, extra_info
+            return subject_name, imgs, seg
         
         elif self.mode == 'test':
-            return imgs, extra_info
+            return subject_name, imgs
