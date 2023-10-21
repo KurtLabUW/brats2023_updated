@@ -57,6 +57,7 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
         os.makedirs(saved_ckpts_dir)
         os.system(f'chmod a+rwx {saved_ckpts_dir}')
 
+    print("---------------------------------------------------")
     print(f"TRAINING SUMMARY")
     print(f"Model: {model_str}")
     print(f"Loss functions: {loss_functs_str}") 
@@ -67,7 +68,7 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
     print(f"Data directory: {data_dir}")
     print(f"Out directory: {out_dir}")
     print(f"Save interval: {save_interval}")
-    print("----------------------------------")
+    print("---------------------------------------------------")
 
     model = MODEL_STR_TO_FUNC[model_str]
     loss_functs = [LOSS_STR_TO_FUNC[l] for l in loss_functs_str]
