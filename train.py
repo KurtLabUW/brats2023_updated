@@ -24,17 +24,31 @@ MODEL_STR_TO_FUNC = {
     'unet3d': unet3d.U_Net3d()
 }
 
-def adjust_learning_rate(optimizer, epoch, init_lr, decay_rate=0.995):
+def exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate):
+    """Exponentially decays learning rate of optimizer at given epoch."""
     lr = init_lr * (decay_rate ** (epoch-1))
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
-def train(data_dir, model_str, loss_functs_str, weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, batch_size=1):
+def seg_to_one_hot_channels(seg):
+    """Converts segmentation to 3 channels, each a one-hot encoding of a tumour region label."""
+    B,_,H,W,D = seg.shape
+    seg3 = torch.zeros((B,3,H,W,D))
+    for channel_value in [1,2,3]:
+        seg3[:, channel_value-1, :, :, :] = (seg == channel_value).type(torch.float)
+    return seg3
 
-    model = MODEL_STR_TO_FUNC[model_str]
-    loss_functs = [LOSS_STR_TO_FUNC[l] for l in loss_functs_str]
-    optimizer = optim.Adam(model.parameters(), lr=init_lr, weight_decay=0, amsgrad=True)
+def disjoint_to_overlapping(seg):
+    """Converts tensor channels from representing disjoint regions to overlapping ones."""
+    mask = torch.zeros_like(seg)
+    mask[:,0] = seg[:, 0] + seg[:, 1] + seg[:, 2] #WHOLE TUMOR
+    mask[:,1] = seg[:, 0] + seg[:, 2] #TUMOR CORE
+    mask[:,2] = seg[:, 2] #ENHANCING TUMOR
+    return mask
+    
+def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, save_interval=10, batch_size=1):
 
+    # Set up directories and paths.
     if out_dir is None:
         out_dir = os.getcwd()
     latest_ckpt_path = os.path.join(out_dir, 'latest_ckpt.pth.tar')
@@ -43,8 +57,19 @@ def train(data_dir, model_str, loss_functs_str, weights, init_lr, max_epoch, tra
         os.makedirs(saved_ckpts_dir)
         os.system(f'chmod a+rwx {saved_ckpts_dir}')
 
+    print(f"TRAINING SUMMARY")
+    print(f"Using {model_str} model.")
+    print(f"Using loss functions {loss_functs_str} with weights {loss_weights}.")
+    print(f"Initial learning rate is {init_lr} and max epochs is {max_epoch}.")
     print(f"Training on {training_regions} regions.")
+    print(f"Training on data from {data_dir} and saving checkpoints to {out_dir} every {save_interval} epochs.")
+    print("----------------------------------")
 
+    model = MODEL_STR_TO_FUNC[model_str]
+    loss_functs = [LOSS_STR_TO_FUNC[l] for l in loss_functs_str]
+    optimizer = optim.Adam(model.parameters(), lr=init_lr, weight_decay=0, amsgrad=True)
+
+    # Check if training for first time or continuing from a saved checkpoint.
     if not os.path.exists(latest_ckpt_path):
         epoch_start = 1
         print('No training checkpoint found. Will train from beginning.')
@@ -66,6 +91,8 @@ def train(data_dir, model_str, loss_functs_str, weights, init_lr, max_epoch, tra
     for epoch in range(epoch_start, max_epoch+1):
         print(f'Starting epoch {epoch}...')
 
+        exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate)
+
         losses_over_epoch = []
         for _, imgs, seg in train_loader:
 
@@ -76,22 +103,10 @@ def train(data_dir, model_str, loss_functs_str, weights, init_lr, max_epoch, tra
             seg = seg.cuda()
 
             # Split segmentation into 3 channels.
-            # Turn below into function
-            B,_,H,W,D = seg.shape
-            seg3 = torch.zeros((B,3,H,W,D))
-            for channel_value in [1,2,3]:
-                seg3[:, channel_value-1, :, :, :] = (seg == channel_value).type(torch.float)
+            seg = seg_to_one_hot_channels(seg)
 
-            # Convert disjoint to overlapping
             if training_regions == 'overlapping':
-                # Combine the segmentation labels into partially overlapping regions
-                mask = torch.zeros_like(seg3)
-                mask[:,0] = seg3[:, 0] + seg3[:, 1] + seg3[:, 2] #WHOLE TUMOR
-                mask[:,1] = seg3[:, 0] + seg3[:, 2] #TUMOR CORE
-                mask[:,2] = seg3[:, 2] #ENHANCING TUMOR
-                mask = mask.float()
-            else:
-                mask = seg3.float()
+                seg = disjoint_to_overlapping(seg)
 
             x_in = torch.cat(imgs, dim=1)
             output = model(x_in)
@@ -102,38 +117,32 @@ def train(data_dir, model_str, loss_functs_str, weights, init_lr, max_epoch, tra
             for n, loss_function in enumerate(loss_functs):      
                 temp = 0
                 for i in range(3):
-                    temp += loss_function(output[:,i:i+1].to(device='cuda:1'), mask[:,i:i+1].to(device='cuda:1'))
+                    temp += loss_function(output[:,i:i+1].to(device='cuda:1'), seg[:,i:i+1].to(device='cuda:1'))
 
-                loss += temp * weights[n]
+                loss += temp * loss_weights[n]
 
-            adjust_learning_rate(optimizer, epoch, init_lr)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
             losses_over_epoch.append(loss.detach().cpu())
 
+        # Compute, save and report loss from the epoch.
         average_epoch_loss = np.mean(losses_over_epoch)
         with open(os.path.join(out_dir, 'loss_values.dat'), 'a') as f:
             f.write(f'{epoch}, {average_epoch_loss}\n')
         print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')
 
-        print(init_lr)
-        for param_group in optimizer.param_groups:
-            print(param_group['lr'])
 
         print('Saving model checkpoint...')
-
         checkpoint = {
             'epoch': epoch,
             'model_sd': model.state_dict(),
             'optim_sd': optimizer.state_dict()
         }
-
         torch.save(checkpoint, latest_ckpt_path)
-        if epoch % 10 == 0:
+        if epoch % save_interval == 0:
             torch.save(checkpoint, os.path.join(saved_ckpts_dir, f'epoch{epoch}.pth.tar'))
-
         print('Checkpoint saved successfully.')
 
 if __name__ == '__main__':
