@@ -43,18 +43,18 @@ def train(data_dir, model_str, loss_functs_str, weights, init_lr, max_epoch, tra
         os.makedirs(saved_ckpts_dir)
         os.system(f'chmod a+rwx {saved_ckpts_dir}')
 
-    print(f"Training on {training_regions} regions")
+    print(f"Training on {training_regions} regions.")
 
     if not os.path.exists(latest_ckpt_path):
         epoch_start = 1
-        print('No training checkpoint found. Training from beginning...')
+        print('No training checkpoint found. Will train from beginning.')
     else:
         print('Training checkpoint found. Loading checkpoint...')
         checkpoint = torch.load(latest_ckpt_path)
         epoch_start = checkpoint['epoch'] + 1
         model.load_state_dict(checkpoint['model_sd'])
         optimizer.load_state_dict(checkpoint['optim_sd'])
-        print(f'Continuing training from epoch {epoch_start}...')
+        print(f'Checkpoint loaded. Will continue training from epoch {epoch_start}.')
 
     train_composed = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
                                               trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32))
