@@ -9,42 +9,7 @@ from data import datasets, trans # in same directory, could rewrite these .py fi
 import torch.nn as nn
 # import losses as lf2 # in same directory
 # import EdgeLoss3D # in same directory
-from models import unet3d
-
-LOSS_STR_TO_FUNC = {
-    'mse': nn.MSELoss(),
-    'cross-entropy': nn.CrossEntropyLoss(),
-    # 'edge-loss': EdgeLoss3D.GMELoss3D(),
-    # 'dice': lf.DiceLoss(),
-    # 'focal': lf.FocalLoss()
-    # 'hd'
-}
-
-MODEL_STR_TO_FUNC = {
-    'unet3d': unet3d.U_Net3d()
-}
-
-def exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate):
-    """Exponentially decays learning rate of optimizer at given epoch."""
-    lr = init_lr * (decay_rate ** (epoch-1))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
-
-def seg_to_one_hot_channels(seg):
-    """Converts segmentation to 3 channels, each a one-hot encoding of a tumour region label."""
-    B,_,H,W,D = seg.shape
-    seg3 = torch.zeros((B,3,H,W,D))
-    for channel_value in [1,2,3]:
-        seg3[:, channel_value-1, :, :, :] = (seg == channel_value).type(torch.float)
-    return seg3
-
-def disjoint_to_overlapping(seg):
-    """Converts tensor channels from representing disjoint regions to overlapping ones."""
-    mask = torch.zeros_like(seg)
-    mask[:,0] = seg[:, 0] + seg[:, 1] + seg[:, 2] #WHOLE TUMOR
-    mask[:,1] = seg[:, 0] + seg[:, 2] #TUMOR CORE
-    mask[:,2] = seg[:, 2] #ENHANCING TUMOR
-    return mask
+from utils import *
     
 def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, save_interval=10, batch_size=1):
 
@@ -86,12 +51,8 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
         optimizer.load_state_dict(checkpoint['optim_sd'])
         print(f'Checkpoint loaded. Will continue training from epoch {epoch_start}.')
 
-    train_composed = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
-                                              trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32))
-                                              ])
-    train_set = datasets.BratsDataset(data_dir, transforms=train_composed, mode='train')
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
-    
+    train_loader = make_dataloader(data_dir, shuffle=True, mode='train')
+
     print('Training starts.')
     for epoch in range(epoch_start, max_epoch+1):
         print(f'Starting epoch {epoch}...')
@@ -142,7 +103,9 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
         checkpoint = {
             'epoch': epoch,
             'model_sd': model.state_dict(),
-            'optim_sd': optimizer.state_dict()
+            'optim_sd': optimizer.state_dict(),
+            'model_str': model_str,
+            'training_regions': training_regions
         }
         torch.save(checkpoint, latest_ckpt_path)
         if epoch % save_interval == 0:
