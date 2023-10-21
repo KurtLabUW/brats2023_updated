@@ -2,7 +2,7 @@ import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from data import datasets, trans
-
+import numpy as np
 
 data_dir = '/mmfs1/home/ehoney22/debug_data/train'
 batch_size=1
