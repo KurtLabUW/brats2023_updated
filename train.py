@@ -24,16 +24,16 @@ MODEL_STR_TO_FUNC = {
     'unet3d': unet3d.U_Net3d()
 }
 
-# def adjust_learning_rate(optimizer, epoch, init_lr, decay_rate=0.995):
-#     lr = init_lr * (decay_rate ** (epoch))
-#     for param_group in optimizer.param_groups:
-#         param_group['lr'] = lr
+def adjust_learning_rate(optimizer, epoch, init_lr, decay_rate=0.995):
+    lr = init_lr * (decay_rate ** (epoch-1))
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
 
-def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training_regions='overlapping', out_dir=None, batch_size=1):
+def train(data_dir, model_str, loss_functs_str, weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, batch_size=1):
 
     model = MODEL_STR_TO_FUNC[model_str]
     loss_functs = [LOSS_STR_TO_FUNC[l] for l in loss_functs_str]
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=0, amsgrad=True)
+    optimizer = optim.Adam(model.parameters(), lr=init_lr, weight_decay=0, amsgrad=True)
 
     if out_dir is None:
         out_dir = os.getcwd()
@@ -64,7 +64,7 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
     
     print('Training starts.')
     for epoch in range(epoch_start, max_epoch+1):
-        print('Starting epoch {epoch}...')
+        print(f'Starting epoch {epoch}...')
 
         losses_over_epoch = []
         for _, imgs, seg in train_loader:
@@ -106,6 +106,7 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
 
                 loss += temp * weights[n]
 
+            adjust_learning_rate(optimizer, epoch, init_lr)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -117,11 +118,9 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
             f.write(f'{epoch}, {average_epoch_loss}\n')
         print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')
 
-        print(lr)
+        print(init_lr)
         for param_group in optimizer.param_groups:
             print(param_group['lr'])
-
-        # adjust_learning_rate(optimizer, epoch, )
 
         print('Saving model checkpoint...')
 
