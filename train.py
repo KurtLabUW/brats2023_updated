@@ -24,6 +24,11 @@ MODEL_STR_TO_FUNC = {
     'unet3d': unet3d.U_Net3d()
 }
 
+# def adjust_learning_rate(optimizer, epoch, init_lr, decay_rate=0.995):
+#     lr = init_lr * (decay_rate ** (epoch))
+#     for param_group in optimizer.param_groups:
+#         param_group['lr'] = lr
+
 def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training_regions='overlapping', out_dir=None, batch_size=1):
 
     model = MODEL_STR_TO_FUNC[model_str]
@@ -57,9 +62,9 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
     train_set = datasets.BratsDataset(data_dir, transforms=train_composed, mode='train')
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
     
-
+    print('Training starts.')
     for epoch in range(epoch_start, max_epoch+1):
-        print('Training starts')
+        print('Starting epoch {epoch}...')
 
         losses_over_epoch = []
         for _, imgs, seg in train_loader:
@@ -92,7 +97,7 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
             output = model(x_in)
             output = output.float()
 
-            # Compute weighted loss.
+            # Compute weighted loss, summed across each region.
             loss = 0.
             for n, loss_function in enumerate(loss_functs):      
                 temp = 0
@@ -108,10 +113,17 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
             losses_over_epoch.append(loss.detach().cpu())
 
         average_epoch_loss = np.mean(losses_over_epoch)
-        print(f'Epoch {epoch}. Average loss = {average_epoch_loss:.4f}.')
-
         with open(os.path.join(out_dir, 'loss_values.dat'), 'a') as f:
-            f.write(str(average_epoch_loss) + '\n')
+            f.write(f'{epoch}, {average_epoch_loss}\n')
+        print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')
+
+        print(lr)
+        for param_group in optimizer.param_groups:
+            print(param_group['lr'])
+
+        # adjust_learning_rate(optimizer, epoch, )
+
+        print('Saving model checkpoint...')
 
         checkpoint = {
             'epoch': epoch,
@@ -120,9 +132,10 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
         }
 
         torch.save(checkpoint, latest_ckpt_path)
-
         if epoch % 10 == 0:
             torch.save(checkpoint, os.path.join(saved_ckpts_dir, f'epoch{epoch}.pth.tar'))
+
+        print('Checkpoint saved successfully.')
 
 if __name__ == '__main__':
 
