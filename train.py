@@ -58,11 +58,15 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
         os.system(f'chmod a+rwx {saved_ckpts_dir}')
 
     print(f"TRAINING SUMMARY")
-    print(f"Using {model_str} model.")
-    print(f"Using loss functions {loss_functs_str} with weights {loss_weights}.")
-    print(f"Initial learning rate is {init_lr} and max epochs is {max_epoch}.")
-    print(f"Training on {training_regions} regions.")
-    print(f"Training on data from {data_dir} and saving checkpoints to {out_dir} every {save_interval} epochs.")
+    print(f"Model: {model_str}")
+    print(f"Loss functions: {loss_functs_str}") 
+    print(f"Loss weights: {loss_weights}")
+    print(f"Initial learning rate: {init_lr}")
+    print(f"Max epochs: {max_epoch}")
+    print(f"Training regions: {training_regions}")
+    print(f"Data directory: {data_dir}")
+    print(f"Out directory: {out_dir}")
+    print(f"Save interval: {save_interval}")
     print("----------------------------------")
 
     model = MODEL_STR_TO_FUNC[model_str]
@@ -132,7 +136,6 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
         with open(os.path.join(out_dir, 'loss_values.dat'), 'a') as f:
             f.write(f'{epoch}, {average_epoch_loss}\n')
         print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')
-
 
         print('Saving model checkpoint...')
         checkpoint = {
