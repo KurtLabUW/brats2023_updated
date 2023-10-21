@@ -67,7 +67,8 @@ def train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, training
             model.train()
 
             # Move data to GPU.
-            imgs, seg = imgs.cuda(), seg.cuda()
+            imgs = [img.cuda() for img in imgs]
+            seg = seg.cuda()
 
             # Split segmentation into 3 channels.
             # Turn below into function
