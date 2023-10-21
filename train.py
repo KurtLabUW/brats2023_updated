@@ -131,5 +131,6 @@ if __name__ == '__main__':
     weights = [0.4, 0.7]
     lr = 6e-5
     max_epoch = 20
+    out_dir = '/mmfs1/home/ehoney22/debug'
 
-    train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch)
+    train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, out_dir=out_dir)
