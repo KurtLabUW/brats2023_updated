@@ -21,7 +21,7 @@ MODEL_STR_TO_FUNC = {
     'unet3d': unet3d.U_Net3d()
 }
 
-def make_dataloader(data_dir, shuffle, mode, batch_size):
+def make_dataloader(data_dir, shuffle, mode, batch_size=1):
     transforms_composed = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
                                               trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32))
                                               ])
