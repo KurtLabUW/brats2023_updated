@@ -32,9 +32,23 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
     loss_functs = [LOSS_STR_TO_FUNC[l] for l in loss_functs_str]
     loss_weights = checkpoint['loss_weights']
 
-    print(f"Loaded {model_str} model trained on {training_regions} regions for {epoch} epochs.")
+    # print(f"Loaded {model_str} model trained on {training_regions} regions for {epoch} epochs.")
 
-    print(f"Evaluating model on {eval_regions} regions.")
+    # print(f"Evaluating model on {eval_regions} regions.")
+
+    print("---------------------------------------------------")
+    print(f"TRAINING SUMMARY")
+    print(f"Model: {model_str}")
+    print(f"Loss functions: {loss_functs_str}") 
+    print(f"Loss weights: {loss_weights}")
+    print(f"Training regions: {training_regions}")
+    print(f"Epochs trained: {epoch}")
+    print("---------------------------------------------------")
+    print("VALIDATION SUMMARY")
+    print(f"Evaluation regions: {eval_regions}")
+    print(f"Data directory: {data_dir}")
+    print(f"Out directory: {out_dir}")
+    print("---------------------------------------------------")
 
     val_loader = make_dataloader(data_dir, shuffle=False, mode='train')
 
@@ -64,5 +78,12 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
 
             pred = probs_to_preds(output, training_regions)
 
-            print(seg.shape, output.shape)
-        
+            print(seg.shape, output.shape, pred.shape)
+
+if __name__ == '__main__':
+
+    data_dir = '/mmfs1/home/ehoney22/debug_data/train'
+    ckpt_path = '/mmfs1/home/ehoney22/debug/saved_ckpts/epoch20.pth.tar'
+    out_dir = '/mmfs1/home/ehoney22/debug'
+
+    validate(data_dir, ckpt_path)
