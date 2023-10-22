@@ -39,6 +39,8 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
 
             model.eval()
 
+            subject_name = subject_name[0]
+
             # Move data to GPU.
             imgs = [img.cuda() for img in imgs]
 
