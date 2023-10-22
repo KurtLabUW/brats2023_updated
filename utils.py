@@ -112,3 +112,14 @@ def save_pred_as_nifti(pred, save_dir, data_dir, subject_name):
     pred_nifti = nib.nifti1.Nifti1Image(pred_for_nifti, affine=affine, header=header)
     filename = f'{subject_name}.nii.gz'
     nib.nifti1.save(pred_nifti, os.path.join(save_dir, filename))
+
+def compute_loss(output, seg, loss_functs, loss_weights):
+    # Compute weighted loss, summed across each region.
+    loss = 0.
+    for n, loss_function in enumerate(loss_functs):      
+        temp = 0
+        for i in range(3):
+            temp += loss_function(output[:,i:i+1].to(device='cuda:1'), seg[:,i:i+1].to(device='cuda:1'))
+
+        loss += temp * loss_weights[n]
+    return loss

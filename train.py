@@ -105,7 +105,9 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
             'model_sd': model.state_dict(),
             'optim_sd': optimizer.state_dict(),
             'model_str': model_str,
-            'training_regions': training_regions
+            'training_regions': training_regions,
+            'loss_functs_str': loss_functs_str,
+            'loss_weights': loss_weights
         }
         torch.save(checkpoint, latest_ckpt_path)
         if epoch % save_interval == 0:

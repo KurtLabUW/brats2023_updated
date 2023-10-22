@@ -10,7 +10,6 @@ import nibabel as nib
 
 from utils import *
 
-
 def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
 
     # Set up directories and paths.
@@ -34,6 +33,7 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
 
     test_loader = make_dataloader(data_dir, shuffle=False, mode='test')
 
+    print('Inference starts.')
     with torch.no_grad():
         for subject_name, imgs in test_loader:
 
@@ -51,6 +51,8 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
             pred = probs_to_preds(output, training_regions)
 
             save_pred_as_nifti(pred, preds_dir, data_dir, subject_name)
+
+    print(f'Inference completed. Predictions saved in {preds_dir}.')
 
 if __name__ == '__main__':
 
