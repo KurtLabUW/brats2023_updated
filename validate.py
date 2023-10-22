@@ -1,14 +1,10 @@
 import torch.nn as nn
-import attention_unet # in same directory
 import os
 from natsort import natsorted
 import torch
 from torchvision import transforms
 from data import datasets, trans # in same directory, could rewrite these .py files to be cleaner too
 import numpy as np
-import glob
-from torch.utils.data import DataLoader
-from skimage.metrics import structural_similarity as ssim
 import matplotlib.pyplot as plt
 from monai.metrics import HausdorffDistanceMetric
 
