@@ -103,7 +103,7 @@ def fetch_affine_header(subject_name, data_dir):
 def save_pred_as_nifti(pred, save_dir, data_dir, subject_name):
 
     # Convert back from 3 one-hot encoded channels to 1 channel with 3 tumour region labels
-    pred_for_nifti = np.zeros_like(pred[0])
+    pred = np.array(pred)
     pred_for_nifti = pred[0] + pred[1]*2 + pred[2]*3
     pred_for_nifti = np.squeeze(pred_for_nifti)
     pred_for_nifti = reshape_input(pred_for_nifti)
@@ -111,7 +111,7 @@ def save_pred_as_nifti(pred, save_dir, data_dir, subject_name):
     affine, header = fetch_affine_header(subject_name, data_dir)
     pred_nifti = nib.nifti1.Nifti1Image(pred_for_nifti, affine=affine, header=header)
     filename = f'{subject_name}.nii.gz'
-    nib.nifti1.save(pred_nifti, os.path.join(save_dir, filename))
+    nib.nifti1.save(pred_nifti.astype(np.uint8), os.path.join(save_dir, filename))
 
 def compute_loss(output, seg, loss_functs, loss_weights):
     # Compute weighted loss, summed across each region.

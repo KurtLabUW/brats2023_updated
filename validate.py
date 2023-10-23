@@ -89,7 +89,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
                 seg_eval = seg
                 preds_eval = preds
 
-            print(seg_eval.shape, preds_eval.shape)
+            # Now all tensors have dimensions BCHWD = [1,3,128,192,128]
 
             # Compute metrics between seg_eval and preds_eval.
 
