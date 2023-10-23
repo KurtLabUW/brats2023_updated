@@ -63,18 +63,34 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
             seg = seg_to_one_hot_channels(seg)
 
             if training_regions == 'overlapping':
-                seg = disjoint_to_overlapping(seg)
+                seg_train = disjoint_to_overlapping(seg)
+            elif training_regions == 'disjoint':
+                seg_train = seg
 
             x_in = torch.cat(imgs, dim=1)
             output = model(x_in)
             output = output.float()
 
-            val_loss = compute_loss(output, seg, loss_functs, loss_weights)
+            val_loss = compute_loss(output, seg_train, loss_functs, loss_weights)
             val_loss_vals.append(val_loss.detach().cpu())
 
-            pred = probs_to_preds(output, training_regions)
+            preds = probs_to_preds(output, training_regions)
 
-            print(seg.shape, output.shape, pred.shape)
+            print(seg.shape, output.shape, preds.shape)
+
+            if eval_regions == 'overlapping':
+                # Convert seg and pred to 3 channels corresponding to overlapping regions
+                seg_eval = disjoint_to_overlapping(seg)
+                preds_eval = disjoint_to_overlapping(preds)
+                
+            elif eval_regions == 'disjoint':
+                # Convert seg and pred to 3 channels corresponding to disjoint regions
+                seg_eval = seg
+                preds_eval = preds
+
+            print(seg_eval.shape, preds_eval.shape)
+
+            # Compute metrics between seg_eval and preds_eval.
 
 if __name__ == '__main__':
 
@@ -82,4 +98,4 @@ if __name__ == '__main__':
     ckpt_path = '/mmfs1/home/ehoney22/debug/saved_ckpts/epoch20.pth.tar'
     out_dir = '/mmfs1/home/ehoney22/debug'
 
-    validate(data_dir, ckpt_path)
+    validate(data_dir, ckpt_path, out_dir=out_dir)

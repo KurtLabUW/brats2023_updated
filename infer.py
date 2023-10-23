@@ -35,11 +35,9 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
 
     print('Inference starts.')
     with torch.no_grad():
-        for subject_name, imgs in test_loader:
+        for subject_names, imgs in test_loader:
 
             model.eval()
-
-            subject_name = subject_name[0]
 
             # Move data to GPU.
             imgs = [img.cuda() for img in imgs]
@@ -48,9 +46,11 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
             output = model(x_in)
             output = output.float()
 
-            pred = probs_to_preds(output, training_regions)
+            preds = probs_to_preds(output, training_regions)
 
-            save_pred_as_nifti(pred, preds_dir, data_dir, subject_name)
+            # Iterate over batch and save each prediction.
+            for i, subject_name in enumerate(subject_names):
+                save_pred_as_nifti(preds[i], preds_dir, data_dir, subject_name)
 
     print(f'Inference completed. Predictions saved in {preds_dir}.')
 

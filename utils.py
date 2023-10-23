@@ -43,13 +43,13 @@ def seg_to_one_hot_channels(seg):
         seg3[:, channel_value-1, :, :, :] = (seg == channel_value).type(torch.float)
     return seg3
 
-def disjoint_to_overlapping(seg):
-    """Converts tensor channels from representing disjoint regions to overlapping ones."""
-    mask = torch.zeros_like(seg)
-    mask[:,0] = seg[:, 0] + seg[:, 1] + seg[:, 2] #WHOLE TUMOR
-    mask[:,1] = seg[:, 0] + seg[:, 2] #TUMOR CORE
-    mask[:,2] = seg[:, 2] #ENHANCING TUMOR
-    return mask
+def disjoint_to_overlapping(seg_disjoint):
+    """Converts tensor representing one-hot encoding of disjoint regions to that of overlapping ones."""
+    seg_overlapping = torch.zeros_like(seg_disjoint)
+    seg_overlapping[:,0] = seg_disjoint[:, 0] + seg_disjoint[:, 1] + seg_disjoint[:, 2] #WHOLE TUMOR
+    seg_overlapping[:,1] = seg_disjoint[:, 0] + seg_disjoint[:, 2] #TUMOR CORE
+    seg_overlapping[:,2] = seg_disjoint[:, 2] #ENHANCING TUMOR
+    return seg_overlapping
 
 def reshape_input(input):
     out = np.zeros((240, 240, 155))
@@ -57,40 +57,40 @@ def reshape_input(input):
     return out
 
 def overlapping_probs_to_preds(output, t1=0.45, t2=0.4, t3=0.45):
-    output_ = np.squeeze(output.cpu().detach().numpy())
-    c1, c2, c3 = output_[0] > t1, output_[1] > t2, output_[2] > t3
-    pred = (c1 > 0).astype(np.uint8) # NCR
-    pred[(c2 == False) * (c1 == True)] = 2 # ED
-    pred[(c3 == True) * (c1 == True)] = 3 # ET
-    output_plot = np.zeros_like(output_)
-    output_plot[0] = (pred == 1) #NCR
-    output_plot[1] = (pred == 2) #ED
-    output_plot[2] = (pred == 3) #ET
+    output = output.cpu().detach().numpy()
+    c1, c2, c3 = output[:, 0] > t1, output[:, 1] > t2, output[:, 2] > t3
+    preds = (c1 > 0).astype(np.uint8) # NCR
+    preds[(c2 == False) * (c1 == True)] = 2 # ED
+    preds[(c3 == True) * (c1 == True)] = 3 # ET
+    output_plot = np.zeros_like(output)
+    output_plot[:, 0] = (preds == 1) #NCR
+    output_plot[:, 1] = (preds == 2) #ED
+    output_plot[:, 2] = (preds == 3) #ET
     output_plot = output_plot.astype(np.uint8)
     return output_plot
 
 def disjoint_probs_to_preds(output, t=0.5):
-    output_ = np.squeeze(output.cpu().detach().numpy())
-    c1, c2, c3 = output_[0], output_[1], output_[2]
+    output = output.cpu().detach().numpy()
+    c1, c2, c3 = output[:, 0], output[:, 1], output[:, 2]
     max_label = np.maximum(np.maximum(c1, c2), c3)
-    pred = np.zeros_like(output_)
-    pred[0] = np.where(c1 < max_label, 0, max_label)
-    pred[1] = np.where(c2 < max_label, 0, max_label)
-    pred[2] = np.where(c3 < max_label, 0, max_label)
-    output_plot = np.zeros_like(output_)
+    preds = np.zeros_like(output)
+    preds[:, 0] = np.where(c1 < max_label, 0, max_label)
+    preds[:, 1] = np.where(c2 < max_label, 0, max_label)
+    preds[:, 2] = np.where(c3 < max_label, 0, max_label)
+    output_plot = np.zeros_like(output)
     for c in range(0, 3):
-        output_plot[c] = np.where(pred[c] > t, 1., 0.)
+        output_plot[:, c] = np.where(preds[:, c] > t, 1., 0.)
     output_plot = output_plot.astype(np.uint8)
     return output_plot
 
 def probs_to_preds(output, training_regions):
 
     if training_regions == 'overlapping':
-        pred = overlapping_probs_to_preds(output)
+        preds = overlapping_probs_to_preds(output)
     elif training_regions == 'disjoint':
-        pred = disjoint_probs_to_preds(output)
+        preds = disjoint_probs_to_preds(output)
 
-    return pred
+    return preds
 
 def fetch_affine_header(subject_name, data_dir):
 
