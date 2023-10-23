@@ -50,6 +50,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
 
     val_loss_vals = []
 
+    print('Validation starts.')
     with torch.no_grad():
         for _, imgs, seg in val_loader:
 

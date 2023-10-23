@@ -57,30 +57,30 @@ def reshape_input(input):
     return out
 
 def overlapping_probs_to_preds(output, t1=0.45, t2=0.4, t3=0.45):
-    output = output.cpu().detach().numpy()
+    output = output.cpu().detach()
     c1, c2, c3 = output[:, 0] > t1, output[:, 1] > t2, output[:, 2] > t3
-    preds = (c1 > 0).astype(np.uint8) # NCR
+    preds = (c1 > 0).to(torch.uint8) # NCR
     preds[(c2 == False) * (c1 == True)] = 2 # ED
     preds[(c3 == True) * (c1 == True)] = 3 # ET
-    output_plot = np.zeros_like(output)
-    output_plot[:, 0] = (preds == 1) #NCR
-    output_plot[:, 1] = (preds == 2) #ED
-    output_plot[:, 2] = (preds == 3) #ET
-    output_plot = output_plot.astype(np.uint8)
+    output_plot = torch.zeros_like(output)
+    output_plot[:, 0] = (preds == 1).to(torch.uint8) #NCR
+    output_plot[:, 1] = (preds == 2).to(torch.uint8) #ED
+    output_plot[:, 2] = (preds == 3).to(torch.uint8) #ET
+    output_plot = output_plot.to(torch.uint8)
     return output_plot
 
 def disjoint_probs_to_preds(output, t=0.5):
-    output = output.cpu().detach().numpy()
+    output = output.cpu().detach()
     c1, c2, c3 = output[:, 0], output[:, 1], output[:, 2]
-    max_label = np.maximum(np.maximum(c1, c2), c3)
-    preds = np.zeros_like(output)
-    preds[:, 0] = np.where(c1 < max_label, 0, max_label)
-    preds[:, 1] = np.where(c2 < max_label, 0, max_label)
-    preds[:, 2] = np.where(c3 < max_label, 0, max_label)
-    output_plot = np.zeros_like(output)
+    max_label = torch.max(torch.max(c1, c2), c3)
+    preds = torch.zeros_like(output)
+    preds[:, 0] = torch.where(c1 < max_label, torch.tensor(0), max_label)
+    preds[:, 1] = torch.where(c2 < max_label, torch.tensor(0), max_label)
+    preds[:, 2] = torch.where(c3 < max_label, torch.tensor(0), max_label)
+    output_plot = torch.zeros_like(output)
     for c in range(0, 3):
-        output_plot[:, c] = np.where(preds[:, c] > t, 1., 0.)
-    output_plot = output_plot.astype(np.uint8)
+        output_plot[:, c] = torch.where(preds[:, c] > t, torch.tensor(1.), torch.tensor(0.))
+    output_plot = output_plot.to(torch.uint8)
     return output_plot
 
 def probs_to_preds(output, training_regions):
