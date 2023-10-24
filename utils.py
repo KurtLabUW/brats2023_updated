@@ -120,7 +120,7 @@ def compute_loss(output, seg, loss_functs, loss_weights):
     for n, loss_function in enumerate(loss_functs):      
         temp = 0
         for i in range(3):
-            temp += loss_function(output[:,i:i+1].to(device='cuda:1'), seg[:,i:i+1].to(device='cuda:1'))
+            temp += loss_function(output[:,i:i+1].cuda(), seg[:,i:i+1].cuda())
 
         loss += temp * loss_weights[n]
     return loss
