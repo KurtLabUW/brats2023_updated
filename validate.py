@@ -6,9 +6,18 @@ from torchvision import transforms
 from data import datasets, trans # in same directory, could rewrite these .py files to be cleaner too
 import numpy as np
 import matplotlib.pyplot as plt
-from monai.metrics import HausdorffDistanceMetric
+from monai.metrics import HausdorffDistanceMetric, DiceMetric
 
 from utils import *
+
+class Dice():
+    def __init__(self):
+        pass
+    def __call__(self, y_pred, y_true):
+        tol=1e-12
+        numerator = (y_pred * y_true).sum()
+        denominator = y_pred.sum() + y_true.sum()
+        return ((2 * numerator) + tol)/ (denominator + tol)
 
 def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batch_size=1):
 
@@ -50,6 +59,12 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
 
     val_loss_vals = []
 
+    hd_metric = HausdorffDistanceMetric(include_background=True, percentile=95, reduction="mean_batch")
+    dice_metric = DiceMetric(include_background=True, reduction="mean_batch")
+
+    DiceScore = Dice()
+    D1_log, D2_log, D3_log = [], [], []
+
     print('Validation starts.')
     with torch.no_grad():
         for _, imgs, seg in val_loader:
@@ -79,12 +94,15 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
 
             print(seg.shape, output.shape, preds.shape)
 
+            eval_region_names = []
             if eval_regions == 'overlapping':
+                eval_region_names = ['WT', 'TC', 'ET']
                 # Convert seg and pred to 3 channels corresponding to overlapping regions
                 seg_eval = disjoint_to_overlapping(seg)
                 preds_eval = disjoint_to_overlapping(preds)
                 
             elif eval_regions == 'disjoint':
+                eval_region_names = ['NCR', 'ED', 'ET']
                 # Convert seg and pred to 3 channels corresponding to disjoint regions
                 seg_eval = seg
                 preds_eval = preds
@@ -92,6 +110,30 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
             # Now all tensors have dimensions BCHWD = [1,3,128,192,128]
 
             # Compute metrics between seg_eval and preds_eval.
+            hd_metric(y_pred = preds_eval, y=seg_eval)
+            dice_metric(y_pred = preds_eval, y=seg_eval)
+
+            D1 = DiceScore(preds_eval[:,0], seg_eval[:,0])
+            D2 = DiceScore(preds_eval[:,1], seg_eval[:,1])
+            D3 = DiceScore(preds_eval[:,2], seg_eval[:,2])
+
+            D1_log.append(D1)
+            D2_log.append(D2)
+            D3_log.append(D3)
+
+    print(f'Val loss = {np.mean(val_loss_vals)}')
+
+    hd_metric_batch = hd_metric.aggregate()
+    for i in range(3):
+        print(f'HD95 {i} = {hd_metric_batch[i].item()}')
+    dice_metric_batch = dice_metric.aggregate()
+    for i in range(3):
+        print(f'Dice Score {i} = {dice_metric_batch[i].item()}')
+
+    print('Other Dice scores')
+    print(np.mean(D1_log))
+    print(np.mean(D2_log))
+    print(np.mean(D3_log))
 
 if __name__ == '__main__':
 
