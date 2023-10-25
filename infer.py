@@ -9,8 +9,9 @@ import matplotlib.pyplot as plt
 import nibabel as nib
 
 from utils import *
+from postprocess import *
 
-def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
+def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=None):
 
     # Set up directories and paths.
     if out_dir is None:
@@ -50,7 +51,7 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1):
 
             # Iterate over batch and save each prediction.
             for i, subject_name in enumerate(subject_names):
-                save_pred_as_nifti(preds[i], preds_dir, data_dir, subject_name)
+                save_pred_as_nifti(preds[i], preds_dir, data_dir, subject_name, postprocess_function)
 
     print(f'Inference completed. Predictions saved in {preds_dir}.')
 
@@ -59,5 +60,6 @@ if __name__ == '__main__':
     data_dir = '/mmfs1/home/ehoney22/debug_data/test'
     ckpt_path = '/mmfs1/home/ehoney22/debug/saved_ckpts/epoch20.pth.tar'
     out_dir = '/mmfs1/home/ehoney22/debug'
+    postprocess_function = rm_dust_fh
 
-    infer(data_dir, ckpt_path, out_dir=out_dir)
+    infer(data_dir, ckpt_path, out_dir=out_dir, postprocess_function=postprocess_function)
