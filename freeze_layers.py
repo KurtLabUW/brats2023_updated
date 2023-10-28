@@ -92,6 +92,8 @@ def freeze_then_continue_training(data_dir, ckpt_A_path, max_epoch, frozen_layer
         model.load_state_dict(checkpoint['model_sd'])
         optimizer.load_state_dict(checkpoint['optim_sd'])
 
+        freeze_layers(model, frozen_layers) 
+
     train_loader = make_dataloader(data_dir, shuffle=True, mode='train')
 
     print('Training starts.')
