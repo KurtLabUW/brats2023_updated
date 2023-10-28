@@ -107,7 +107,9 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
             'model_str': model_str,
             'training_regions': training_regions,
             'loss_functs_str': loss_functs_str,
-            'loss_weights': loss_weights
+            'loss_weights': loss_weights,
+            'init_lr': init_lr,
+            'decay_rate': decay_rate
         }
         torch.save(checkpoint, latest_ckpt_path)
         if epoch % save_interval == 0:
