@@ -9,12 +9,19 @@ import matplotlib.pyplot as plt
 from monai.metrics import HausdorffDistanceMetric, DiceMetric
 
 from utils import *
+from plot import plot_slices
 
 def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batch_size=1):
 
     # Set up directory.
     if out_dir is None:
         out_dir = os.getcwd()
+
+    # Plot dir
+    plots_dir = os.path.join(out_dir, 'plots')
+    if not os.path.exists(plots_dir):
+        os.makedirs(plots_dir)
+        os.system(f'chmod a+rwx {plots_dir}')
 
     print(f"Loading model from {ckpt_path}...")
     checkpoint = torch.load(ckpt_path)
@@ -56,7 +63,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
 
     print('Validation starts.')
     with torch.no_grad():
-        for _, imgs, seg in val_loader:
+        for subject_names, imgs, seg in val_loader:
 
             model.eval()
 
@@ -101,6 +108,10 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
             # Compute metrics between seg_eval and preds_eval.
             hd_metric(y_pred = preds_eval, y=seg_eval)
             dice_metric(y_pred = preds_eval, y=seg_eval)
+
+            for b in batch_size:
+                fig = plot_slices(imgs[b], seg_eval[i], preds_eval[i], 64)
+                fig.savefig(os.path.join(plots_dir, subject_names[i]))
 
     print(f'Val loss = {np.mean(val_loss_vals)}')
 
