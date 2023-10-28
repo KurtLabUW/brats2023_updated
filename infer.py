@@ -32,7 +32,7 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=
 
     print(f"Loaded {model_str} model trained on {training_regions} regions for {epoch} epochs.")
 
-    test_loader = make_dataloader(data_dir, shuffle=False, mode='test')
+    test_loader = make_dataloader(data_dir, shuffle=False, mode='test', batch_size=batch_size)
 
     print('Inference starts.')
     with torch.no_grad():
