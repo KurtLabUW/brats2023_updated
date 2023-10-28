@@ -68,6 +68,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
             model.eval()
 
             # Move data to GPU.
+            print(type(imgs), type(imgs[0]), imgs[0].shape)
             imgs = [img.cuda() for img in imgs]
             seg = seg.cuda()
 
@@ -110,7 +111,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
             dice_metric(y_pred = preds_eval, y=seg_eval)
 
             for i, subject_name in enumerate(subject_names):
-                fig = plot_slices(imgs[b], seg_eval[i], preds_eval[i], 64)
+                fig = plot_slices(imgs[i], seg_eval[i], preds_eval[i], 64)
                 fig.savefig(os.path.join(plots_dir, subject_name))
 
     print(f'Val loss = {np.mean(val_loss_vals)}')
