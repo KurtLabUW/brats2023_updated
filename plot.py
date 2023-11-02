@@ -39,7 +39,7 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
             axes[row, i].imshow(seg[i, :, :, nslice], vmin=0, vmax=1)
             axes[row, i].set_title(f'Segmentation Channel {i+1}')
             axes[row, i].axis('off')
-        seg_combined = np.sum(seg, axis=0)
+        seg_combined = seg[0] + 2*seg[1] + 3*seg[2]
         axes[row, 3].imshow(seg_combined[:, :, nslice], vmin=0, vmax=1)
         axes[row, 3].set_title('All Segmentation Channels')
         axes[row, 3].axis('off')
@@ -50,7 +50,7 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
             axes[row, i].imshow(pred[i, :, :, nslice], vmin=0, vmax=1)
             axes[row, i].set_title(f'Prediction Channel {i+1}')
             axes[row, i].axis('off')
-        pred_combined = np.sum(pred, axis=0)
+        pred_combined = pred[0] + 2*pred[1] + 3*pred[2]
         axes[row, 3].imshow(pred_combined[:, :, nslice], vmin=0, vmax=1)
         axes[row, 3].set_title('All Prediction Channels')
         axes[row, 3].axis('off')
