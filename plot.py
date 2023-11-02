@@ -51,7 +51,7 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
             axes[row, i].imshow(np.where(pred_slice == i+1, i+1, 0), cmap='viridis', vmin=0, vmax=3)
             axes[row, i].set_title(f'{region} prediction')
             axes[row, i].axis('off')
-        axes[row, 3].imshow(pred_slice, cmap='viridis', vmin=0, vmax=1)
+        axes[row, 3].imshow(pred_slice, cmap='viridis', vmin=0, vmax=3)
         axes[row, 3].set_title('All prediction channels')
         axes[row, 3].axis('off')
 
