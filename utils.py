@@ -100,11 +100,14 @@ def fetch_affine_header(subject_name, data_dir):
     
     return nifti.affine, nifti.header
 
+def one_hot_channels_to_three_labels(pred):
+    return pred[0] + pred[1]*2 + pred[2]*3
+
 def save_pred_as_nifti(pred, save_dir, data_dir, subject_name, postprocess_function=None):
 
     # Convert back from 3 one-hot encoded channels to 1 channel with 3 tumour region labels
     pred = np.array(pred)
-    pred_for_nifti = pred[0] + pred[1]*2 + pred[2]*3
+    pred_for_nifti = one_hot_channels_to_three_labels(pred)
     pred_for_nifti = np.squeeze(pred_for_nifti)
     pred_for_nifti = reshape_input(pred_for_nifti)
     pred_for_nifti = pred_for_nifti.astype(np.uint8)
