@@ -68,7 +68,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
             model.eval()
 
             # Move data to GPU.
-            print(type(imgs), type(imgs[0]), imgs[0].shape)
+            # print(type(imgs), type(imgs[0]), imgs[0].shape)
             imgs = [img.cuda() for img in imgs]
             seg = seg.cuda()
 
@@ -89,7 +89,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
 
             preds = probs_to_preds(output, training_regions)
 
-            print(seg.shape, output.shape, preds.shape)
+            # print(seg.shape, output.shape, preds.shape)
 
             eval_region_names = []
             if eval_regions == 'overlapping':
@@ -112,7 +112,9 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
 
             for i, subject_name in enumerate(subject_names):
                 batch_imgs = [img[i, 0].cpu().detach() for img in imgs]
-                fig = plot_slices(batch_imgs, seg_eval[i].cpu().detach(), preds_eval[i], 64)
+                seg3 = one_hot_channels_to_three_labels(seg[i].cpu.detach())
+                pred3 = one_hot_channels_to_three_labels(preds[i])
+                fig = plot_slices(batch_imgs, seg3, pred3, 64)
                 fig.savefig(os.path.join(plots_dir, subject_name))
 
     print(f'Val loss = {np.mean(val_loss_vals)}')

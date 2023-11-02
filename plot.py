@@ -30,29 +30,29 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
     if images is not None:
         for i, suffix in enumerate(['t1c', 't1n', 't2f', 't2w']):
             axes[row, i].imshow(images[i][:, :, nslice], cmap='gray')
-            axes[row, i].set_title(f'{suffix} modality')
+            axes[row, i].set_title(f'{suffix}')
             axes[row, i].axis('off')
         row += 1
 
     if seg is not None:
-        for i in range(3):
-            axes[row, i].imshow(seg[i, :, :, nslice], vmin=0, vmax=1)
-            axes[row, i].set_title(f'Segmentation Channel {i+1}')
+        seg_slice = seg[:, :, nslice]
+        for i, region in enumerate(['NCR', 'ED', 'ET']):
+            axes[row, i].imshow(np.where(seg_slice == i+1, i+1, 0), cmap='viridis', vmin=0, vmax=3)
+            axes[row, i].set_title(f'{region} ground truth')
             axes[row, i].axis('off')
-        seg_combined = seg[0] + 2*seg[1] + 3*seg[2]
-        axes[row, 3].imshow(seg_combined[:, :, nslice], vmin=0, vmax=1)
-        axes[row, 3].set_title('All Segmentation Channels')
+        axes[row, 3].imshow(seg_slice, cmap='viridis', vmin=0, vmax=3)
+        axes[row, 3].set_title('All ground truth channels')
         axes[row, 3].axis('off')
         row += 1
 
     if pred is not None:
-        for i in range(3):
-            axes[row, i].imshow(pred[i, :, :, nslice], vmin=0, vmax=1)
-            axes[row, i].set_title(f'Prediction Channel {i+1}')
+        pred_slice = pred[:, :, nslice]
+        for i, region in enumerate(['NCR', 'ED', 'ET']):
+            axes[row, i].imshow(np.where(pred_slice == i+1, i+1, 0), cmap='viridis', vmin=0, vmax=3)
+            axes[row, i].set_title(f'{region} prediction')
             axes[row, i].axis('off')
-        pred_combined = pred[0] + 2*pred[1] + 3*pred[2]
-        axes[row, 3].imshow(pred_combined[:, :, nslice], vmin=0, vmax=1)
-        axes[row, 3].set_title('All Prediction Channels')
+        axes[row, 3].imshow(pred_slice, cmap='viridis', vmin=0, vmax=1)
+        axes[row, 3].set_title('All prediction channels')
         axes[row, 3].axis('off')
 
     plt.tight_layout()
