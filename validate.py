@@ -114,7 +114,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, batc
                 batch_imgs = [img[i, 0].cpu().detach() for img in imgs]
                 seg3 = one_hot_channels_to_three_labels(seg[i].cpu().detach())
                 pred3 = one_hot_channels_to_three_labels(preds[i])
-                fig = plot_slices(batch_imgs, seg3, pred3, 64)
+                fig = plot_slices(batch_imgs, seg3, pred3)
                 fig.savefig(os.path.join(plots_dir, subject_name))
 
     print(f'Val loss = {np.mean(val_loss_vals)}')

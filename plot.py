@@ -15,6 +15,18 @@ from utils import *
 import matplotlib.pyplot as plt
 import numpy as np
 
+def median_slice(seg):
+
+    one_hot_encoded = np.where(seg != 0, 1, 0)
+
+    slice_sums = np.sum(one_hot_encoded, axis=(0,1))
+    median_value = np.median(slice_sums)
+
+    median_indices = np.argwhere(slice_sums == median_value)
+    median_index = median_indices[len(median_indices) // 2][0]
+
+    return median_index
+
 def plot_slices(images=None, seg=None, pred=None, nslice=None):
     n_rows = 0
     if images is not None:
@@ -23,6 +35,14 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
         n_rows += 1
     if pred is not None:
         n_rows += 1
+
+    if nslice is None:
+        if seg is not None:
+            n_slice = median_slice(seg)
+        elif pred is not None:
+            n_slice = median_slice(pred)
+        else:
+            n_slice=64
 
     fig, axes = plt.subplots(n_rows, 4, figsize=(15, 5*n_rows))
 
