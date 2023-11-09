@@ -50,7 +50,7 @@ def disjoint_to_overlapping(seg_disjoint):
 
 def reshape_input(input):
     out = np.zeros((240, 240, 155))
-    out[37:216, 10:229, 0:155] = input 
+    out[56:184,24:216,14:142] = input 
     return out
 
 def overlapping_probs_to_preds(output, t1=0.45, t2=0.4, t3=0.45):

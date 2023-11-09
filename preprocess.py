@@ -23,4 +23,4 @@ def znorm_rescale(img):
 
 def center_crop(img):
 
-    return img[37:216, 10:229, 0:155]
+    return img[56:184,24:216,14:142]
