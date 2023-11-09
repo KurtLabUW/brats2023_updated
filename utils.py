@@ -22,10 +22,7 @@ MODEL_STR_TO_FUNC = {
 }
 
 def make_dataloader(data_dir, shuffle, mode, batch_size=1):
-    transforms_composed = transforms.Compose([trans.CenterCropBySize([128,192,128]), 
-                                              trans.NumpyType((np.float32, np.float32,np.float32, np.float32,np.float32))
-                                              ])
-    dataset = datasets.BratsDataset(data_dir, transforms=transforms_composed, mode=mode)
+    dataset = datasets.BratsDataset(data_dir, mode=mode)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True)
     return dataloader
 
@@ -53,7 +50,7 @@ def disjoint_to_overlapping(seg_disjoint):
 
 def reshape_input(input):
     out = np.zeros((240, 240, 155))
-    out[56:184,24:216,14:142] = input 
+    out[37:216, 10:229, 0:155] = input 
     return out
 
 def overlapping_probs_to_preds(output, t1=0.45, t2=0.4, t3=0.45):

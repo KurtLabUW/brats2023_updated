@@ -1,15 +1,14 @@
 from torch.utils.data import Dataset
 import os
 import nibabel as nib
-from preprocess import znorm_rescale
+from preprocess import znorm_rescale, center_crop
 import numpy as np
 import torch
 
 class BratsDataset(Dataset):
-    def __init__(self, data_dir, transforms, mode):
+    def __init__(self, data_dir, mode):
         self.data_dir = data_dir
         self.subject_list = os.listdir(data_dir)
-        self.transforms = transforms
         self.mode = mode
 
     def __len__(self):
@@ -51,12 +50,13 @@ class BratsDataset(Dataset):
         # Do Z-score norm and rescaling preprocessing.
         imgs = [znorm_rescale(img) for img in imgs]
 
-        # Do transformations of data.
+        # Perform center crop.
+        imgs = [center_crop(img) for img in imgs]
+
         imgs = [x[None, ...] for x in imgs]
-        imgs = self.transforms(imgs)
 
         # Convert to torch tensors.
-        imgs = [np.ascontiguousarray(x) for x in imgs]
+        imgs = [np.ascontiguousarray(x, dtype=np.float32) for x in imgs]
         imgs = [torch.from_numpy(x) for x in imgs]
 
         # If train, process segmentation similarly.

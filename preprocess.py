@@ -16,7 +16,11 @@ def znorm_rescale(img):
     movingNorm=np.round((movingNorm*a)+b,2)
 
     # Rescaling
-    p2, p98 = np.percentile(movingNorm, (1, 99))
+    p2, p98 = np.percentile(movingNorm, (1, 99)) # These parameters may not be optimal, further testing could be done
     moving_rescale = exposure.rescale_intensity(movingNorm, in_range=(p2, p98))
 
     return moving_rescale
+
+def center_crop(img):
+
+    return img[37:216, 10:229, 0:155]

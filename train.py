@@ -65,27 +65,23 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
             model.train()
 
             # Move data to GPU.
-            imgs = [img.cuda() for img in imgs]
+            imgs = [img.cuda() for img in imgs] # img B1HWD
             seg = seg.cuda()
 
             # Split segmentation into 3 channels.
             seg = seg_to_one_hot_channels(seg)
+            # seg is B3HWD - 3 channels, one-hot encoding of the tumor region labels
 
             if training_regions == 'overlapping':
                 seg = disjoint_to_overlapping(seg)
+                # seg is B3HWD - 3 channels, one-hot encoding of the overlapping regions
 
-            x_in = torch.cat(imgs, dim=1)
+            x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
             output = model(x_in)
             output = output.float()
 
             # Compute weighted loss, summed across each region.
-            loss = 0.
-            for n, loss_function in enumerate(loss_functs):      
-                temp = 0
-                for i in range(3):
-                    temp += loss_function(output[:,i:i+1].to(device='cuda:1'), seg[:,i:i+1].to(device='cuda:1'))
-
-                loss += temp * loss_weights[n]
+            loss = compute_loss(output, seg, loss_functs, loss_weights)
 
             optimizer.zero_grad()
             loss.backward()
