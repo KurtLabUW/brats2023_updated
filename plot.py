@@ -58,7 +58,7 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
             axes[row, i].set_title(f'{region} ground truth')
             axes[row, i].axis('off')
         axes[row, 3].imshow(seg_slice, cmap='viridis', vmin=0, vmax=3)
-        axes[row, 3].set_title('All ground truth channels')
+        axes[row, 3].set_title('All regions ground truth')
         axes[row, 3].axis('off')
         row += 1
 
@@ -69,7 +69,7 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
             axes[row, i].set_title(f'{region} prediction')
             axes[row, i].axis('off')
         axes[row, 3].imshow(pred_slice, cmap='viridis', vmin=0, vmax=3)
-        axes[row, 3].set_title('All prediction channels')
+        axes[row, 3].set_title('All regions prediction')
         axes[row, 3].axis('off')
 
     plt.tight_layout()
