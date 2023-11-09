@@ -38,11 +38,11 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
 
     if nslice is None:
         if seg is not None:
-            n_slice = median_slice(seg)
+            nslice = median_slice(seg)
         elif pred is not None:
-            n_slice = median_slice(pred)
+            nslice = median_slice(pred)
         else:
-            n_slice=64
+            nslice=64
 
     fig, axes = plt.subplots(n_rows, 4, figsize=(15, 5*n_rows))
 
