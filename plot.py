@@ -15,17 +15,14 @@ from utils import *
 import matplotlib.pyplot as plt
 import numpy as np
 
-def median_slice(seg):
+def max_slice(seg):
 
     one_hot_encoded = np.where(seg != 0, 1, 0)
 
     slice_sums = np.sum(one_hot_encoded, axis=(0,1))
-    median_value = np.median(slice_sums)
+    max_index = np.argmax(slice_sums)
 
-    median_indices = np.argwhere(slice_sums == median_value)
-    median_index = median_indices[len(median_indices) // 2][0]
-
-    return median_index
+    return max_index
 
 def plot_slices(images=None, seg=None, pred=None, nslice=None):
     n_rows = 0
@@ -38,9 +35,9 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
 
     if nslice is None:
         if seg is not None:
-            nslice = median_slice(seg)
+            nslice = max_slice(seg)
         elif pred is not None:
-            nslice = median_slice(pred)
+            nslice = max_slice(pred)
         else:
             nslice=64
 
