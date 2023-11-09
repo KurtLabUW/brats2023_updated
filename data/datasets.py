@@ -61,8 +61,8 @@ class BratsDataset(Dataset):
 
         # If train, process segmentation similarly.
         if self.mode == 'train':
+            seg = center_crop(seg)
             seg = seg[None, ...]
-            seg = self.transforms(seg)
             seg = np.ascontiguousarray(seg)
             seg = torch.from_numpy(seg)
 
