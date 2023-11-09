@@ -26,8 +26,9 @@ if __name__ == '__main__':
 
     X, Y, Z = [], [], []
 
-    for i, subject_name in enumerate(os.listdir(preds_dir)):
-        print(i)
+    for subject_name in os.listdir(preds_dir):
+        if 'BraTS' not in subject_name:
+            continue
         modality_nifti = f'{subject_name}-t1n.nii.gz'
         modality_nifti_path = os.path.join(preds_dir, subject_name, modality_nifti)
         nifti = nib.load(modality_nifti_path)
@@ -45,7 +46,7 @@ if __name__ == '__main__':
         Y.append(y_indices)
         Z.append(z_indices)
 
-        # print(x_indices, y_indices, z_indices)
+        print(x_indices, y_indices, z_indices)
 
     print(find_minmax_of_tuples(X))
     print(find_minmax_of_tuples(Y))
