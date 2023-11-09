@@ -17,7 +17,7 @@ def find_indicies_of_nonzeros(x):
 
 if __name__ == '__main__':
     
-    preds_dir = ''
+    preds_dir = '/mmfs1/home/ehoney22/debug_data/train'
 
     X, Y, Z = [], [], []
 
