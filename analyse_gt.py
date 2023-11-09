@@ -15,13 +15,19 @@ def find_indicies_of_nonzeros(x):
 
     return start_index, end_index
 
+def find_minmax_of_tuples(tuples_list):
+    min_first = min(t[0] for t in tuples_list)
+    max_second = max(t[1] for t in tuples_list)
+    return min_first, max_second
+
 if __name__ == '__main__':
     
-    preds_dir = '/mmfs1/home/ehoney22/debug_data/train'
+    preds_dir = '/gscratch/kurtlab/brats2023/data/brats-gli/ASNR-MICCAI-BraTS2023-GLI-Challenge-TrainingData'
 
     X, Y, Z = [], [], []
 
-    for subject_name in os.listdir(preds_dir):
+    for i, subject_name in enumerate(os.listdir(preds_dir)):
+        print(i)
         modality_nifti = f'{subject_name}-t1n.nii.gz'
         modality_nifti_path = os.path.join(preds_dir, subject_name, modality_nifti)
         nifti = nib.load(modality_nifti_path)
@@ -39,4 +45,9 @@ if __name__ == '__main__':
         Y.append(y_indices)
         Z.append(z_indices)
 
-        print(x_indices, y_indices, z_indices)
+        # print(x_indices, y_indices, z_indices)
+
+    print(find_minmax_of_tuples(X))
+    print(find_minmax_of_tuples(Y))
+    print(find_minmax_of_tuples(Z))
+    
