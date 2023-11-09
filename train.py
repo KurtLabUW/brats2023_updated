@@ -68,6 +68,9 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
             imgs = [img.cuda() for img in imgs] # img B1HWD
             seg = seg.cuda()
 
+            print(type(imgs[0]), imgs[0].shape)
+            print(type(seg), seg.shape)
+
             # Split segmentation into 3 channels.
             seg = seg_to_one_hot_channels(seg)
             # seg is B3HWD - 3 channels, one-hot encoding of the tumor region labels
