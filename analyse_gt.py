@@ -3,7 +3,7 @@ import torch
 import os
 import numpy as np
 
-def find_indicies_of_nonzeros(x):
+def find_indices_of_nonzeros(x):
     start_index = None
     end_index = None
 
@@ -38,9 +38,9 @@ if __name__ == '__main__':
         y = np.sum(modality_arr, axis=(0,2))
         z = np.sum(modality_arr, axis=(0,1))
 
-        x_indices = find_indicies_of_nonzeros(x)
-        y_indices = find_indicies_of_nonzeros(y)
-        z_indices = find_indicies_of_nonzeros(z)
+        x_indices = find_indices_of_nonzeros(x)
+        y_indices = find_indices_of_nonzeros(y)
+        z_indices = find_indices_of_nonzeros(z)
 
         X.append(x_indices)
         Y.append(y_indices)
@@ -51,4 +51,3 @@ if __name__ == '__main__':
     print(find_minmax_of_tuples(X))
     print(find_minmax_of_tuples(Y))
     print(find_minmax_of_tuples(Z))
-    
