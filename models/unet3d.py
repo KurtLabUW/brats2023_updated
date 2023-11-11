@@ -124,3 +124,7 @@ class U_Net3d(nn.Module):
         d1 = self.Sig(d1)
 
         return d1.to(device='cuda:1')
+    
+    def __str__(self):
+        num_params = sum(p.numel() for p in self.parameters())
+        return f"UNet_3d - {num_params:,} parameters"
