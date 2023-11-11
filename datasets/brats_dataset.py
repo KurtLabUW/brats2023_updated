@@ -1,7 +1,7 @@
 from torch.utils.data import Dataset
 import os
 import nibabel as nib
-from processing.preprocess import znorm_rescale, center_crop
+from ..processing.preprocess import znorm_rescale, center_crop
 import numpy as np
 import torch
 
