@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from brats_dataset import BratsDataset
+from datasets import brats_dataset
 import os
 
 def load_or_initialize_training(model, optimizer, latest_ckpt_path):
@@ -30,7 +30,7 @@ def load_or_initialize_training(model, optimizer, latest_ckpt_path):
     return epoch_start
 
 def make_dataloader(data_dir, shuffle, mode, batch_size=1):
-    dataset = BratsDataset(data_dir, mode=mode)
+    dataset = brats_dataset.BratsDataset(data_dir, mode=mode)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True)
     return dataloader
 
