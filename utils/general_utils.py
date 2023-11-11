@@ -7,30 +7,7 @@ from data import datasets, trans
 import numpy as np
 import nibabel as nib
 import os
-
-LOSS_STR_TO_FUNC = {
-    'mse': nn.MSELoss(),
-    'cross-entropy': nn.CrossEntropyLoss(),
-    # 'edge-loss': EdgeLoss3D.GMELoss3D(),
-    # 'dice': lf.DiceLoss(),
-    # 'focal': lf.FocalLoss()
-    # 'hd'
-}
-
-MODEL_STR_TO_FUNC = {
-    'unet3d': unet3d.U_Net3d()
-}
-
-def make_dataloader(data_dir, shuffle, mode, batch_size=1):
-    dataset = datasets.BratsDataset(data_dir, mode=mode)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True)
-    return dataloader
-
-def exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate):
-    """Exponentially decays learning rate of optimizer at given epoch."""
-    lr = init_lr * (decay_rate ** (epoch-1))
-    for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+from preprocess import undo_center_crop
 
 def seg_to_one_hot_channels(seg):
     """Converts segmentation to 3 channels, each a one-hot encoding of a tumour region label."""
@@ -47,11 +24,6 @@ def disjoint_to_overlapping(seg_disjoint):
     seg_overlapping[:,1] = seg_disjoint[:, 0] + seg_disjoint[:, 2] #TUMOR CORE
     seg_overlapping[:,2] = seg_disjoint[:, 2] #ENHANCING TUMOR
     return seg_overlapping
-
-def reshape_input(input):
-    out = np.zeros((240, 240, 155))
-    out[56:184,24:216,14:142] = input 
-    return out
 
 def overlapping_probs_to_preds(output, t1=0.45, t2=0.4, t3=0.45):
     output = output.cpu().detach()
@@ -106,7 +78,7 @@ def save_pred_as_nifti(pred, save_dir, data_dir, subject_name, postprocess_funct
     pred = np.array(pred)
     pred_for_nifti = one_hot_channels_to_three_labels(pred)
     pred_for_nifti = np.squeeze(pred_for_nifti)
-    pred_for_nifti = reshape_input(pred_for_nifti)
+    pred_for_nifti = undo_center_crop(pred_for_nifti)
     pred_for_nifti = pred_for_nifti.astype(np.uint8)
 
     if postprocess_function:
@@ -116,14 +88,3 @@ def save_pred_as_nifti(pred, save_dir, data_dir, subject_name, postprocess_funct
     pred_nifti = nib.nifti1.Nifti1Image(pred_for_nifti, affine=affine, header=header)
     filename = f'{subject_name}.nii.gz'
     nib.nifti1.save(pred_nifti, os.path.join(save_dir, filename))
-
-def compute_loss(output, seg, loss_functs, loss_weights):
-    # Compute weighted loss, summed across each region.
-    loss = 0.
-    for n, loss_function in enumerate(loss_functs):      
-        temp = 0
-        for i in range(3):
-            temp += loss_function(output[:,i:i+1].cuda(), seg[:,i:i+1].cuda())
-
-        loss += temp * loss_weights[n]
-    return loss

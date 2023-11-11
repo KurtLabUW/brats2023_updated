@@ -54,12 +54,12 @@ class BratsDataset(Dataset):
         imgs = [center_crop(img) for img in imgs]
 
         imgs = [x[None, ...] for x in imgs]
+        imgs = [np.ascontiguousarray(x, dtype=np.float32) for x in imgs]
 
         # Convert to torch tensors.
-        imgs = [np.ascontiguousarray(x, dtype=np.float32) for x in imgs]
         imgs = [torch.from_numpy(x) for x in imgs]
 
-        # If train, process segmentation similarly.
+        # If train mode, process segmentation similarly.
         if self.mode == 'train':
             seg = center_crop(seg)
             seg = seg[None, ...]
