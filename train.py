@@ -2,8 +2,8 @@ import os
 import numpy as np
 import torch 
 from torch import optim
-from utils import *
-from model_utils import *
+from utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss
+from utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
 import csv
 
 def save_tloss_csv(pathname, epoch, tloss):
