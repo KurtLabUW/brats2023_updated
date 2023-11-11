@@ -2,8 +2,8 @@ import os
 import numpy as np
 import torch 
 from torch import optim
-from utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss
-from utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
+from brats_clean.utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss
+from brats_clean.utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
 import csv
     
 def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, batch_size=1):

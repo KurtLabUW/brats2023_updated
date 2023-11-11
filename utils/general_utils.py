@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import nibabel as nib
 import os
-from ..processing.preprocess import undo_center_crop
+from brats_clean.processing.preprocess import undo_center_crop
 
 def seg_to_one_hot_channels(seg):
     """Converts segmentation to 3 channels, each a one-hot encoding of a tumour region label."""
