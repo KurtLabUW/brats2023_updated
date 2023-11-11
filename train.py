@@ -1,57 +1,51 @@
 import os
 import numpy as np
 import torch 
-from torchvision import transforms
-from torch.utils.data import DataLoader
 from torch import optim
-# make sure 'models' folder is in same directory for next import to run
-from data import datasets, trans # in same directory, could rewrite these .py files to be cleaner too
-import torch.nn as nn
-# import losses as lf2 # in same directory
-# import EdgeLoss3D # in same directory
 from utils import *
+from model_utils import *
+import csv
+
+def save_tloss_csv(pathname, epoch, tloss):
+    with open(pathname, mode='a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        if epoch == 1:
+            writer.writerow(['Epoch', 'Training Loss'])
+        writer.writerow([epoch, tloss])
     
-def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, save_interval=10, batch_size=1):
+def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, batch_size=1):
 
     # Set up directories and paths.
     if out_dir is None:
         out_dir = os.getcwd()
     latest_ckpt_path = os.path.join(out_dir, 'latest_ckpt.pth.tar')
-    saved_ckpts_dir = os.path.join(out_dir, 'saved_ckpts')
-    if not os.path.exists(saved_ckpts_dir):
-        os.makedirs(saved_ckpts_dir)
-        os.system(f'chmod a+rwx {saved_ckpts_dir}')
+    training_loss_path = os.path.join(out_dir, 'training_loss.csv')
+    backup_ckpts_dir = os.path.join(out_dir, 'backup_ckpts')
+    if not os.path.exists(backup_ckpts_dir):
+        os.makedirs(backup_ckpts_dir)
+        os.system(f'chmod a+rwx {backup_ckpts_dir}')
 
     print("---------------------------------------------------")
     print(f"TRAINING SUMMARY")
-    print(f"Model: {model_str}")
-    print(f"Loss functions: {loss_functs_str}") 
+    print(f"Data directory: {data_dir}")
+    print(f"Model: {model}")
+    print(f"Loss functions: {loss_functions}") 
     print(f"Loss weights: {loss_weights}")
     print(f"Initial learning rate: {init_lr}")
     print(f"Max epochs: {max_epoch}")
     print(f"Training regions: {training_regions}")
-    print(f"Data directory: {data_dir}")
     print(f"Out directory: {out_dir}")
-    print(f"Save interval: {save_interval}")
+    print(f"Decay rate: {decay_rate}")
+    print(f"Backup interval: {backup_interval}")
+    print(f"Batch size: {batch_size}")
     print("---------------------------------------------------")
 
-    model = MODEL_STR_TO_FUNC[model_str]
-    loss_functs = [LOSS_STR_TO_FUNC[l] for l in loss_functs_str]
     optimizer = optim.Adam(model.parameters(), lr=init_lr, weight_decay=0, amsgrad=True)
 
     # Check if training for first time or continuing from a saved checkpoint.
-    if not os.path.exists(latest_ckpt_path):
-        epoch_start = 1
-        print('No training checkpoint found. Will train from beginning.')
-    else:
-        print('Training checkpoint found. Loading checkpoint...')
-        checkpoint = torch.load(latest_ckpt_path)
-        epoch_start = checkpoint['epoch'] + 1
-        model.load_state_dict(checkpoint['model_sd'])
-        optimizer.load_state_dict(checkpoint['optim_sd'])
-        print(f'Checkpoint loaded. Will continue training from epoch {epoch_start}.')
+    epoch_start = load_or_initialize_training(model, optimizer, latest_ckpt_path)
 
-    train_loader = make_dataloader(data_dir, shuffle=True, mode='train')
+    train_loader = make_dataloader(data_dir, shuffle=True, mode='train', batch_size=batch_size)
 
     print('Training starts.')
     for epoch in range(epoch_start, max_epoch+1):
@@ -65,26 +59,23 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
             model.train()
 
             # Move data to GPU.
-            imgs = [img.cuda() for img in imgs] # img B1HWD
+            imgs = [img.cuda() for img in imgs] # img is B1HWD
             seg = seg.cuda()
-
-            print(type(imgs[0]), imgs[0].shape)
-            print(type(seg), seg.shape)
 
             # Split segmentation into 3 channels.
             seg = seg_to_one_hot_channels(seg)
-            # seg is B3HWD - 3 channels, one-hot encoding of the tumor region labels
+            # seg is B3HWD - each channel is one-hot encoding of a disjoint region
 
             if training_regions == 'overlapping':
                 seg = disjoint_to_overlapping(seg)
-                # seg is B3HWD - 3 channels, one-hot encoding of the overlapping regions
+                # seg is B3HWD - each channel is one-hot encoding of an overlapping region
 
             x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
             output = model(x_in)
             output = output.float()
 
-            # Compute weighted loss, summed across each region.
-            loss = compute_loss(output, seg, loss_functs, loss_weights)
+            # Compute weighted loss, summed across each training region.
+            loss = compute_loss(output, seg, loss_functions, loss_weights)
 
             optimizer.zero_grad()
             loss.backward()
@@ -94,8 +85,7 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
 
         # Compute, save and report loss from the epoch.
         average_epoch_loss = np.mean(losses_over_epoch)
-        with open(os.path.join(out_dir, 'loss_values.dat'), 'a') as f:
-            f.write(f'{epoch}, {average_epoch_loss}\n')
+        save_tloss_csv(training_loss_path, epoch, average_epoch_loss)
         print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')
 
         print('Saving model checkpoint...')
@@ -103,26 +93,29 @@ def train(data_dir, model_str, loss_functs_str, loss_weights, init_lr, max_epoch
             'epoch': epoch,
             'model_sd': model.state_dict(),
             'optim_sd': optimizer.state_dict(),
-            'model_str': model_str,
-            'training_regions': training_regions,
-            'loss_functs_str': loss_functs_str,
+            'model': model,
+            'loss_functions': loss_functions,
             'loss_weights': loss_weights,
             'init_lr': init_lr,
+            'training_regions': training_regions,
             'decay_rate': decay_rate
         }
         torch.save(checkpoint, latest_ckpt_path)
-        if epoch % save_interval == 0:
-            torch.save(checkpoint, os.path.join(saved_ckpts_dir, f'epoch{epoch}.pth.tar'))
+        if epoch % backup_interval == 0:
+            torch.save(checkpoint, os.path.join(backup_ckpts_dir, f'epoch{epoch}.pth.tar'))
         print('Checkpoint saved successfully.')
 
 if __name__ == '__main__':
 
+    from models import unet3d
+    import torch.nn as nn
+
     data_dir = '/mmfs1/home/ehoney22/debug_data/train'
-    model_str = 'unet3d'
-    loss_functs_str = ['mse', 'cross-entropy']
-    weights = [0.4, 0.7]
+    model = unet3d.U_Net3d()
+    loss_functions = [nn.MSELoss(), nn.CrossEntropyLoss()]
+    loss_weights = [0.4, 0.7]
     lr = 6e-5
     max_epoch = 20
     out_dir = '/mmfs1/home/ehoney22/debug'
 
-    train(data_dir, model_str, loss_functs_str, weights, lr, max_epoch, out_dir=out_dir)
+    train(data_dir, model, loss_functions, loss_weights, lr, max_epoch, out_dir=out_dir)
