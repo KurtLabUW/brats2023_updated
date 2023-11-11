@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from brats_clean.datasets import brats_dataset
+from .datasets import brats_dataset
 import os
 
 def load_or_initialize_training(model, optimizer, latest_ckpt_path):
