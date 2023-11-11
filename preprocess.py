@@ -21,6 +21,12 @@ def znorm_rescale(img):
 
     return moving_rescale
 
-def center_crop(img):
+X_START, X_END, Y_START, Y_END, Z_START, Z_END = (56,184, 24,216, 14,142)
 
-    return img[56:184,24:216,14:142]
+def center_crop(img):
+    return img[X_START:X_END, Y_START:Y_END, Z_START:Z_END]
+
+def undo_center_crop(input):
+    out = np.zeros((240, 240, 155))
+    out[X_START:X_END, Y_START:Y_END, Z_START:Z_END] = input 
+    return out

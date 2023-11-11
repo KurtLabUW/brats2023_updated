@@ -1,9 +1,4 @@
 import torch
-import torch.nn as nn
-from torchvision import transforms
-from torch.utils.data import DataLoader
-from models import unet3d
-from data import datasets, trans
 import numpy as np
 import nibabel as nib
 import os

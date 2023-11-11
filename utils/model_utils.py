@@ -2,7 +2,6 @@ import torch
 from torch.utils.data import DataLoader
 from brats_dataset import BratsDataset
 import os
-from utils import *
 
 def load_or_initialize_training(model, optimizer, latest_ckpt_path):
     """
@@ -28,6 +27,8 @@ def load_or_initialize_training(model, optimizer, latest_ckpt_path):
         optimizer.load_state_dict(checkpoint['optim_sd'])
         print(f'Checkpoint loaded. Will continue training from epoch {epoch_start}.')
 
+    return epoch_start
+
 def make_dataloader(data_dir, shuffle, mode, batch_size=1):
     dataset = BratsDataset(data_dir, mode=mode)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True)
@@ -49,9 +50,6 @@ def compute_loss(output, seg, loss_functs, loss_weights):
 
         loss += temp * loss_weights[n]
     return loss
-
-
-    return epoch_start
 
 def freeze_layers(model, frozen_layers):
 
