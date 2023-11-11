@@ -48,6 +48,7 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=
             output = output.float()
 
             preds = probs_to_preds(output, training_regions)
+            # preds is B3HWD
 
             # Iterate over batch and save each prediction.
             for i, subject_name in enumerate(subject_names):

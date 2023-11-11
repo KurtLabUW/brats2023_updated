@@ -5,13 +5,6 @@ from torch import optim
 from utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss
 from utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
 import csv
-
-def save_tloss_csv(pathname, epoch, tloss):
-    with open(pathname, mode='a', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        if epoch == 1:
-            writer.writerow(['Epoch', 'Training Loss'])
-        writer.writerow([epoch, tloss])
     
 def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, batch_size=1):
 
@@ -104,6 +97,13 @@ def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, tra
         if epoch % backup_interval == 0:
             torch.save(checkpoint, os.path.join(backup_ckpts_dir, f'epoch{epoch}.pth.tar'))
         print('Checkpoint saved successfully.')
+
+def save_tloss_csv(pathname, epoch, tloss):
+    with open(pathname, mode='a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        if epoch == 1:
+            writer.writerow(['Epoch', 'Training Loss'])
+        writer.writerow([epoch, tloss])
 
 if __name__ == '__main__':
 

@@ -127,4 +127,4 @@ class U_Net3d(nn.Module):
     
     def __str__(self):
         num_params = sum(p.numel() for p in self.parameters())
-        return f"UNet_3d - {num_params:,} parameters"
+        return f"UNet_3d (with {num_params:,} parameters)"
