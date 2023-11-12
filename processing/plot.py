@@ -1,19 +1,5 @@
-import os
-from natsort import natsorted
-import torch
-from torchvision import transforms
-from data import datasets, trans # in same directory, could rewrite these .py files to be cleaner too
 import numpy as np
-import glob
-from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
-
-import argparse
-from utils import *
-
-
-import matplotlib.pyplot as plt
-import numpy as np
 
 def max_slice(seg):
 
