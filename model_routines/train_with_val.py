@@ -3,7 +3,7 @@ import numpy as np
 import torch 
 from torch import optim
 import csv
-from monai.metrics import HausdorffDistanceMetric, DiceMetric
+from monai.metrics import DiceMetric
 
 from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss
 from ..utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping, probs_to_preds
@@ -27,12 +27,6 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
     elif eval_regions == 'disjoint':
         eval_region_names = ['NCR', 'ED', 'ET']
 
-    def save_loss_and_metrics_csv(pathname, epoch, tloss, vloss, mean_dice, eval_region_scores):
-        with open(pathname, mode='a', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            if epoch == 1:
-                writer.writerow(['Epoch', 'Training Loss', 'Validation Loss', 'Mean Dice'] + [f'Dice {eval_region}' for eval_region in eval_region_names])
-            writer.writerow([epoch, tloss, vloss, mean_dice] + eval_region_scores)
 
     print("---------------------------------------------------")
     print(f"TRAINING WITH VALIDATION SUMMARY")
@@ -191,13 +185,22 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
         if epoch % backup_interval == 0:
             torch.save(checkpoint, os.path.join(backup_ckpts_dir, f'epoch{epoch}.pth.tar'))
         if update_vloss:
+            print('New best validation loss!')
             torch.save(checkpoint, best_vloss_ckpt_path)
         if update_dice:
+            print('New best dice score!')
             torch.save(checkpoint, best_dice_ckpt_path)
 
-        save_loss_and_metrics_csv(loss_and_metrics_path, epoch, average_epoch_loss, average_val_loss, mean_dice, eval_region_dice_scores)
+        save_loss_and_metrics_csv(loss_and_metrics_path, epoch, average_epoch_loss, average_val_loss, mean_dice, eval_region_dice_scores, eval_region_names)
 
         print('Checkpoint saved successfully.')
+
+def save_loss_and_metrics_csv(pathname, epoch, tloss, vloss, mean_dice, eval_region_scores, eval_region_names):
+    with open(pathname, mode='a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        if epoch == 1:
+            writer.writerow(['Epoch', 'Training Loss', 'Validation Loss', 'Mean Dice'] + [f'Dice {eval_region}' for eval_region in eval_region_names])
+        writer.writerow([epoch, tloss, vloss, mean_dice] + eval_region_scores)
 
 if __name__ == '__main__':
 
