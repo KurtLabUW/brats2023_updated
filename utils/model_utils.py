@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader
 from ..datasets import brats_dataset
 import os
 
-def load_or_initialize_training(model, optimizer, latest_ckpt_path):
+def load_or_initialize_training(model, optimizer, latest_ckpt_path, train_with_val=False):
     """
     Load the training checkpoint if it exists, or initialize training from the beginning.
 
@@ -18,6 +18,9 @@ def load_or_initialize_training(model, optimizer, latest_ckpt_path):
 
     if not os.path.exists(latest_ckpt_path):
         epoch_start = 1
+        if train_with_val:
+            best_vloss = float('inf')
+            best_dice = 0
         print('No training checkpoint found. Will start training from scratch.')
     else:
         print('Training checkpoint found. Loading checkpoint...')
@@ -25,8 +28,13 @@ def load_or_initialize_training(model, optimizer, latest_ckpt_path):
         epoch_start = checkpoint['epoch'] + 1
         model.load_state_dict(checkpoint['model_sd'])
         optimizer.load_state_dict(checkpoint['optim_sd'])
+        if train_with_val:
+            best_vloss = checkpoint['vloss']
+            best_dice = checkpoint['dice']
         print(f'Checkpoint loaded. Will continue training from epoch {epoch_start}.')
 
+    if train_with_val:
+        return epoch_start, best_vloss, best_dice
     return epoch_start
 
 def make_dataloader(data_dir, shuffle, mode, batch_size=1):
