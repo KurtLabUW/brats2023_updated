@@ -135,7 +135,7 @@ def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, make
 if __name__ == '__main__':
 
     data_dir = '/mmfs1/home/ehoney22/debug_data/train'
-    ckpt_path = '/mmfs1/home/ehoney22/debug/saved_ckpts/epoch20.pth.tar'
+    ckpt_path = '/mmfs1/home/ehoney22/debug/backup_ckpts/epoch20.pth.tar'
     out_dir = '/mmfs1/home/ehoney22/debug'
 
     validate(data_dir, ckpt_path, out_dir=out_dir)
