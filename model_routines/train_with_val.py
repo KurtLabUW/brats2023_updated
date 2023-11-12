@@ -72,7 +72,7 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
 
         update_vloss = False
         update_dice = False
-        
+
         # Run validation loop.
         if epoch % val_interval == 0:
 
@@ -192,6 +192,7 @@ if __name__ == '__main__':
     loss_weights = [0.4, 0.7]
     lr = 6e-5
     max_epoch = 20
+    val_interval = 5
     out_dir = '/mmfs1/home/ehoney22/debug/train_with_val'
 
-    train_with_val(train_dir, val_dir, model, loss_functions, loss_weights, lr, max_epoch, out_dir=out_dir)
+    train_with_val(train_dir, val_dir, model, loss_functions, loss_weights, lr, max_epoch, val_interval=val_interval, out_dir=out_dir)
