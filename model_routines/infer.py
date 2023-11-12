@@ -1,15 +1,8 @@
 import os
-from natsort import natsorted
 import torch
-from torchvision import transforms
-from data import datasets, trans # in same directory, could rewrite these .py files to be cleaner too
-import numpy as np
-import matplotlib.pyplot as plt
 
-import nibabel as nib
-
-from utils import *
-from postprocess import *
+from ..utils.model_utils import make_dataloader
+from ..utils.general_utils import probs_to_preds, save_pred_as_nifti
 
 def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=None):
 
@@ -24,13 +17,33 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=
     print(f"Loading model from {ckpt_path}...")
     checkpoint = torch.load(ckpt_path)
 
-    epoch = checkpoint['epoch']
+    model = checkpoint['model']
+    loss_functions = checkpoint['loss_functions']
+    loss_weights = checkpoint['loss_weights']
     training_regions = checkpoint['training_regions']
-    model_str = checkpoint['model_str']
-    model = MODEL_STR_TO_FUNC[model_str]
-    model.load_state_dict(checkpoint['model_sd'])
 
-    print(f"Loaded {model_str} model trained on {training_regions} regions for {epoch} epochs.")
+    epoch = checkpoint['epoch']
+    model_sd = checkpoint['model_sd']
+
+    model.load_state_dict(model_sd)
+
+    print(f"Model loaded.")
+
+    print("---------------------------------------------------")
+    print(f"TRAINING SUMMARY")
+    print(f"Model: {model}")
+    print(f"Loss functions: {loss_functions}") 
+    print(f"Loss weights: {loss_weights}")
+    print(f"Training regions: {training_regions}")
+    print(f"Epochs trained: {epoch}")
+    print("---------------------------------------------------")
+    print("INFERENCE SUMMARY")
+    print(f"Data directory: {data_dir}")
+    print(f"Trained model checkpoint path: {ckpt_path}")
+    print(f"Out directory: {out_dir}")
+    print(f"Batch size: {batch_size}")
+    print(f"Postprocess function: {postprocess_function}")
+    print("---------------------------------------------------")
 
     test_loader = make_dataloader(data_dir, shuffle=False, mode='test', batch_size=batch_size)
 
@@ -41,14 +54,14 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=
             model.eval()
 
             # Move data to GPU.
-            imgs = [img.cuda() for img in imgs]
+            imgs = [img.cuda() for img in imgs] # img is B1HWD
 
-            x_in = torch.cat(imgs, dim=1)
+            x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
             output = model(x_in)
             output = output.float()
 
             preds = probs_to_preds(output, training_regions)
-            # preds is B3HWD
+            # preds is B3HWD - each channel is one-hot encoding of a disjoint region
 
             # Iterate over batch and save each prediction.
             for i, subject_name in enumerate(subject_names):
@@ -57,6 +70,8 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=
     print(f'Inference completed. Predictions saved in {preds_dir}.')
 
 if __name__ == '__main__':
+
+    from ..processing.postprocess import rm_dust_fh
 
     data_dir = '/mmfs1/home/ehoney22/debug_data/test'
     ckpt_path = '/mmfs1/home/ehoney22/debug/saved_ckpts/epoch20.pth.tar'
