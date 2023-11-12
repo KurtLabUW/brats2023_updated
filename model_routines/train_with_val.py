@@ -185,7 +185,7 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
             print('New best dice score!')
             torch.save(checkpoint, best_dice_ckpt_path)
 
-        save_loss_and_metrics_csv(loss_and_metrics_path, epoch, average_epoch_loss, average_val_loss, mean_dice, eval_region_dice_scores, eval_region_names)
+        save_loss_and_metrics_csv(loss_and_metrics_path, epoch, average_epoch_loss, average_val_loss, mean_dice, eval_region_dice_scores)
 
         print('Checkpoint saved successfully.')
 
