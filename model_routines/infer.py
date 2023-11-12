@@ -74,7 +74,7 @@ if __name__ == '__main__':
     from ..processing.postprocess import rm_dust_fh
 
     data_dir = '/mmfs1/home/ehoney22/debug_data/test'
-    ckpt_path = '/mmfs1/home/ehoney22/debug/saved_ckpts/epoch20.pth.tar'
+    ckpt_path = '/mmfs1/home/ehoney22/debug/backup_ckpts/epoch20.pth.tar'
     out_dir = '/mmfs1/home/ehoney22/debug'
     postprocess_function = rm_dust_fh
 
