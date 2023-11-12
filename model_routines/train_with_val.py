@@ -75,6 +75,7 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
 
         # Run validation loop.
         if epoch % val_interval == 0:
+            print('Starting validation loop...')
 
             val_loss_vals = []
 
