@@ -4,8 +4,7 @@ import torch
 from torch import optim
 import csv
 
-from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss, train_one_epoch
-from ..utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
+from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, train_one_epoch
     
 def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, batch_size=1):
 
@@ -48,7 +47,7 @@ def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, tra
         exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate)
 
         average_epoch_loss = train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights, training_regions)
-        
+
         # Save and report loss from the epoch.
         save_tloss_csv(training_loss_path, epoch, average_epoch_loss)
         print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')

@@ -94,7 +94,7 @@ def train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights
 
         losses_over_epoch.append(loss.detach().cpu())
 
-    # Compute, save and report loss from the epoch.
+    # Compute loss from the epoch.
     average_epoch_loss = np.mean(losses_over_epoch)
     return average_epoch_loss
 

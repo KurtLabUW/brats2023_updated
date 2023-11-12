@@ -5,10 +5,10 @@ from torch import optim
 import csv
 from monai.metrics import DiceMetric
 
-from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss
+from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss, train_one_epoch
 from ..utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping, probs_to_preds
 
-def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', eval_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, batch_size=1):
+def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', eval_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, val_interval=10, batch_size=1):
 
     # Set up directories and paths.
     if out_dir is None:
@@ -21,6 +21,17 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
     if not os.path.exists(backup_ckpts_dir):
         os.makedirs(backup_ckpts_dir)
         os.system(f'chmod a+rwx {backup_ckpts_dir}')
+
+    # Write header of csv log file.
+    eval_region_names = []
+    if eval_regions == 'overlapping':
+        eval_region_names = ['WT', 'TC', 'ET']
+    elif eval_regions == 'disjoint':
+        eval_region_names = ['NCR', 'ED', 'ET']
+    dice_eval_region_names = [f'Dice {eval_region}' for eval_region in eval_region_names]
+    with open(loss_and_metrics_path, mode='a', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['Epoch', 'Training Loss', 'Validation Loss', 'Mean Dice'] + dice_eval_region_names)
 
     print("---------------------------------------------------")
     print(f"TRAINING WITH VALIDATION SUMMARY")
@@ -36,6 +47,7 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
     print(f"Out directory: {out_dir}")
     print(f"Decay rate: {decay_rate}")
     print(f"Backup interval: {backup_interval}")
+    print(f"Validation interval: {val_interval}")
     print(f"Batch size: {batch_size}")
     print("---------------------------------------------------")
 
@@ -53,113 +65,87 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
 
         exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate)
 
-        losses_over_epoch = []
-        for _, imgs, seg in train_loader:
+        average_epoch_loss = train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights, training_regions)
 
-            model.train()
-
-            # Move data to GPU.
-            imgs = [img.cuda() for img in imgs] # img is B1HWD
-            seg = seg.cuda()
-
-            # Split segmentation into 3 channels.
-            seg = seg_to_one_hot_channels(seg)
-            # seg is B3HWD - each channel is one-hot encoding of a disjoint region
-
-            if training_regions == 'overlapping':
-                seg = disjoint_to_overlapping(seg)
-                # seg is B3HWD - each channel is one-hot encoding of an overlapping region
-
-            x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
-            output = model(x_in)
-            output = output.float()
-
-            # Compute weighted loss, summed across each training region.
-            loss = compute_loss(output, seg, loss_functions, loss_weights)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            losses_over_epoch.append(loss.detach().cpu())
-
-        # Compute, save and report loss from the epoch.
-        average_epoch_loss = np.mean(losses_over_epoch)
+        # Report loss from the epoch.
         print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')
 
-        val_loss_vals = []
-
-        # Recommend use MONAI metrics set-up for different metrics (Cumulative Iterative)
-        dice_metric = DiceMetric(include_background=True, reduction="mean_batch")
-
-        with torch.no_grad():
-            for _, imgs, seg in val_loader:
-
-                model.eval()
-
-                # Move data to GPU.
-                imgs = [img.cuda() for img in imgs] # img is B1HWD
-                seg = seg.cuda()
-
-                # Split segmentation into 3 channels.
-                seg = seg_to_one_hot_channels(seg) # seg is B3HWD
-
-                if training_regions == 'overlapping':
-                    seg_train = disjoint_to_overlapping(seg)
-                    # seg_train is B3HWD - each channel is one-hot encoding of an overlapping region
-                elif training_regions == 'disjoint':
-                    seg_train = seg
-                    # seg_train is B3HWD - each channel is one-hot encoding of a disjoint region
-
-                x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
-                output = model(x_in)
-                output = output.float()
-
-                # Compute weighted loss, summed across each training region.
-                val_loss = compute_loss(output, seg_train, loss_functions, loss_weights)
-                val_loss_vals.append(val_loss.detach().cpu())
-
-                preds = probs_to_preds(output, training_regions)
-
-                eval_region_names = []
-                if eval_regions == 'overlapping':
-                    # eval_region_names = ['WT', 'TC', 'ET']
-                    # Convert seg and pred to 3 channels corresponding to overlapping regions
-                    seg_eval = disjoint_to_overlapping(seg)
-                    preds_eval = disjoint_to_overlapping(preds)
-                    
-                elif eval_regions == 'disjoint':
-                    # eval_region_names = ['NCR', 'ED', 'ET']
-                    # Convert seg and pred to 3 channels corresponding to disjoint regions
-                    seg_eval = seg
-                    preds_eval = preds
-
-                # seg_eval is B3HWD
-                # preds_eval is B3HWD
-
-                # Compute metrics between seg_eval and preds_eval.
-                dice_metric(y_pred = preds_eval, y=seg_eval)
-
-        # Compute and report validation loss.
-        average_val_loss = np.mean(val_loss_vals)
-        print(f'Validation completed. Average validation loss = {average_val_loss}')
-
-        # Aggregate and report the Dice scores.
-        dice_metric_batch = dice_metric.aggregate()
-        eval_region_dice_scores = []
-        for i in range(3):
-            eval_region_dice_scores.append(dice_metric_batch[i].item())
-        mean_dice = np.mean(eval_region_dice_scores)
-
         update_vloss = False
-        if average_val_loss < best_vloss:
-            best_vloss = average_val_loss
-            update_vloss = True
-
         update_dice = False
-        if mean_dice > best_dice:
-            best_dice = mean_dice
-            update_dice = True
+        
+        # Run validation loop.
+        if epoch % val_interval == 0:
+
+            val_loss_vals = []
+
+            # Recommend use MONAI metrics set-up for different metrics (Cumulative Iterative)
+            dice_metric = DiceMetric(include_background=True, reduction="mean_batch")
+
+            with torch.no_grad():
+                for _, imgs, seg in val_loader:
+
+                    model.eval()
+
+                    # Move data to GPU.
+                    imgs = [img.cuda() for img in imgs] # img is B1HWD
+                    seg = seg.cuda()
+
+                    # Split segmentation into 3 channels.
+                    seg = seg_to_one_hot_channels(seg) # seg is B3HWD
+
+                    if training_regions == 'overlapping':
+                        seg_train = disjoint_to_overlapping(seg)
+                        # seg_train is B3HWD - each channel is one-hot encoding of an overlapping region
+                    elif training_regions == 'disjoint':
+                        seg_train = seg
+                        # seg_train is B3HWD - each channel is one-hot encoding of a disjoint region
+
+                    x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
+                    output = model(x_in)
+                    output = output.float()
+
+                    # Compute weighted loss, summed across each training region.
+                    val_loss = compute_loss(output, seg_train, loss_functions, loss_weights)
+                    val_loss_vals.append(val_loss.detach().cpu())
+
+                    preds = probs_to_preds(output, training_regions)
+
+                    if eval_regions == 'overlapping':
+                        # eval_region_names = ['WT', 'TC', 'ET']
+                        # Convert seg and pred to 3 channels corresponding to overlapping regions
+                        seg_eval = disjoint_to_overlapping(seg)
+                        preds_eval = disjoint_to_overlapping(preds)
+                        
+                    elif eval_regions == 'disjoint':
+                        # eval_region_names = ['NCR', 'ED', 'ET']
+                        # Convert seg and pred to 3 channels corresponding to disjoint regions
+                        seg_eval = seg
+                        preds_eval = preds
+
+                    # seg_eval is B3HWD
+                    # preds_eval is B3HWD
+
+                    # Compute metrics between seg_eval and preds_eval.
+                    dice_metric(y_pred = preds_eval, y=seg_eval)
+
+            # Compute and report validation loss.
+            average_val_loss = np.mean(val_loss_vals)
+            print(f'Validation completed. Average validation loss = {average_val_loss}')
+
+            # Aggregate and report the Dice scores.
+            dice_metric_batch = dice_metric.aggregate()
+            eval_region_dice_scores = []
+            for i in range(3):
+                eval_region_dice_scores.append(dice_metric_batch[i].item())
+            mean_dice = np.mean(eval_region_dice_scores)
+
+            if average_val_loss < best_vloss:
+                best_vloss = average_val_loss
+                update_vloss = True
+
+            if mean_dice > best_dice:
+                best_dice = mean_dice
+                update_dice = True
 
         print('Saving model checkpoint...')
         checkpoint = {
@@ -192,8 +178,6 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
 def save_loss_and_metrics_csv(pathname, epoch, tloss, vloss, mean_dice, eval_region_scores):
     with open(pathname, mode='a', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        if epoch == 1:
-            writer.writerow(['Epoch', 'Training Loss', 'Validation Loss', 'Mean Dice', 'Dice 1', 'Dice 2', 'Dice 3'])
         writer.writerow([epoch, tloss, vloss, mean_dice] + eval_region_scores)
 
 if __name__ == '__main__':
