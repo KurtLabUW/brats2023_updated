@@ -134,7 +134,7 @@ def save_tloss_csv(pathname, epoch, tloss):
 if __name__ == '__main__':
 
     data_dir = '/mmfs1/home/ehoney22/debug_data/train'
-    prev_ckpt_path = '/mmfs1/home/ehoney22/debug/saved_ckpts/epoch20.pth.tar'
+    prev_ckpt_path = '/mmfs1/home/ehoney22/debug/backup_ckpts/epoch20.pth.tar'
     max_epoch = 20
     frozen_layers = ['Conv1', 'Conv2', 'Conv3', 'Conv4', 'Conv5', 'Conv6', 'Conv7']
     out_dir = '/mmfs1/home/ehoney22/debug/freeze_then_continue_training'
