@@ -22,12 +22,6 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
         os.makedirs(backup_ckpts_dir)
         os.system(f'chmod a+rwx {backup_ckpts_dir}')
 
-    if eval_regions == 'overlapping':
-        eval_region_names = ['WT', 'TC', 'ET']
-    elif eval_regions == 'disjoint':
-        eval_region_names = ['NCR', 'ED', 'ET']
-
-
     print("---------------------------------------------------")
     print(f"TRAINING WITH VALIDATION SUMMARY")
     print(f"Training data directory: {train_data_dir}")
@@ -195,11 +189,11 @@ def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_wei
 
         print('Checkpoint saved successfully.')
 
-def save_loss_and_metrics_csv(pathname, epoch, tloss, vloss, mean_dice, eval_region_scores, eval_region_names):
+def save_loss_and_metrics_csv(pathname, epoch, tloss, vloss, mean_dice, eval_region_scores):
     with open(pathname, mode='a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         if epoch == 1:
-            writer.writerow(['Epoch', 'Training Loss', 'Validation Loss', 'Mean Dice'] + [f'Dice {eval_region}' for eval_region in eval_region_names])
+            writer.writerow(['Epoch', 'Training Loss', 'Validation Loss', 'Mean Dice', 'Dice 1', 'Dice 2', 'Dice 3'])
         writer.writerow([epoch, tloss, vloss, mean_dice] + eval_region_scores)
 
 if __name__ == '__main__':
