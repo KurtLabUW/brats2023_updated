@@ -107,7 +107,7 @@ def save_tloss_csv(pathname, epoch, tloss):
 
 if __name__ == '__main__':
 
-    from models import unet3d
+    from ..models import unet3d
     import torch.nn as nn
 
     data_dir = '/mmfs1/home/ehoney22/debug_data/train'
