@@ -1,7 +1,10 @@
+import os
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
+
 from ..datasets import brats_dataset
-import os
+from .general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
 
 def load_or_initialize_training(model, optimizer, latest_ckpt_path, train_with_val=False):
     """
@@ -58,6 +61,42 @@ def compute_loss(output, seg, loss_functs, loss_weights):
 
         loss += temp * loss_weights[n]
     return loss
+
+def train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights, training_regions):
+
+    losses_over_epoch = []
+    for _, imgs, seg in train_loader:
+
+        model.train()
+
+        # Move data to GPU.
+        imgs = [img.cuda() for img in imgs] # img is B1HWD
+        seg = seg.cuda()
+
+        # Split segmentation into 3 channels.
+        seg = seg_to_one_hot_channels(seg)
+        # seg is B3HWD - each channel is one-hot encoding of a disjoint region
+
+        if training_regions == 'overlapping':
+            seg = disjoint_to_overlapping(seg)
+            # seg is B3HWD - each channel is one-hot encoding of an overlapping region
+
+        x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
+        output = model(x_in)
+        output = output.float()
+
+        # Compute weighted loss, summed across each region.
+        loss = compute_loss(output, seg, loss_functions, loss_weights)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        losses_over_epoch.append(loss.detach().cpu())
+
+    # Compute, save and report loss from the epoch.
+    average_epoch_loss = np.mean(losses_over_epoch)
+    return average_epoch_loss
 
 def freeze_layers(model, frozen_layers):
 

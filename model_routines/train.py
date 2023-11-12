@@ -4,7 +4,7 @@ import torch
 from torch import optim
 import csv
 
-from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss
+from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, compute_loss, train_one_epoch
 from ..utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
     
 def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, batch_size=1):
@@ -47,38 +47,9 @@ def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, tra
 
         exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate)
 
-        losses_over_epoch = []
-        for _, imgs, seg in train_loader:
-
-            model.train()
-
-            # Move data to GPU.
-            imgs = [img.cuda() for img in imgs] # img is B1HWD
-            seg = seg.cuda()
-
-            # Split segmentation into 3 channels.
-            seg = seg_to_one_hot_channels(seg)
-            # seg is B3HWD - each channel is one-hot encoding of a disjoint region
-
-            if training_regions == 'overlapping':
-                seg = disjoint_to_overlapping(seg)
-                # seg is B3HWD - each channel is one-hot encoding of an overlapping region
-
-            x_in = torch.cat(imgs, dim=1) # x_in is B4HWD
-            output = model(x_in)
-            output = output.float()
-
-            # Compute weighted loss, summed across each training region.
-            loss = compute_loss(output, seg, loss_functions, loss_weights)
-
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-            losses_over_epoch.append(loss.detach().cpu())
-
-        # Compute, save and report loss from the epoch.
-        average_epoch_loss = np.mean(losses_over_epoch)
+        average_epoch_loss = train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights, training_regions)
+        
+        # Save and report loss from the epoch.
         save_tloss_csv(training_loss_path, epoch, average_epoch_loss)
         print(f'Epoch {epoch} completed. Average loss = {average_epoch_loss:.4f}.')
 
