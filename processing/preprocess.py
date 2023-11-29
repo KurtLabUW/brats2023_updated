@@ -21,12 +21,15 @@ def znorm_rescale(img):
 
     return moving_rescale
 
+# Crop ranges for center crop.
 X_START, X_END, Y_START, Y_END, Z_START, Z_END = (56,184, 24,216, 14,142)
 
 def center_crop(img):
+    """Center crops a MRI image (or seg) to be (128, 192, 128)."""
     return img[X_START:X_END, Y_START:Y_END, Z_START:Z_END]
 
 def undo_center_crop(input):
+    """Undoes center crop of a MRI image (or seg)."""
     out = np.zeros((240, 240, 155))
     out[X_START:X_END, Y_START:Y_END, Z_START:Z_END] = input 
     return out

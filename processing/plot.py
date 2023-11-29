@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def max_slice(seg):
-
+    """Finds the slice (in the z-direction) of a segmentation with the most tumor voxels."""
     one_hot_encoded = np.where(seg != 0, 1, 0)
 
     slice_sums = np.sum(one_hot_encoded, axis=(0,1))
@@ -11,6 +11,17 @@ def max_slice(seg):
     return max_index
 
 def plot_slices(images=None, seg=None, pred=None, nslice=None):
+    """For a given subject, plots same slice of MRI images, ground truth and predicted segmentations, if provided.
+
+    Args:
+        images (list, optional): List of MRI image tensors of shape HWD. Defaults to None.
+        seg (torch.Tensor, optional): Ground truth segmentation tensor of shape HWD. Defaults to None.
+        pred (torch.Tensor, optional): Predicted segmentation tensor of shape HWD. Defaults to None.
+        nslice (int, optional): Slice of images and segs to plot. Defaults to None.
+
+    Returns:
+        matplotlib.figure.Figure: Figure containing the plot.
+    """
     n_rows = 0
     if images is not None:
         n_rows += 1

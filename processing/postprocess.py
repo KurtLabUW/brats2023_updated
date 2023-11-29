@@ -1,6 +1,12 @@
 import numpy as np
 import cc3d
 
+def quick_rm_dust(pred_mat):
+
+    pred_mat_rm_dust = cc3d.dust(pred_mat, threshold=50, connectivity=26)
+
+    return pred_mat_rm_dust
+
 def get_tissue_wise_seg(pred_mat, tissue_type):
 
     pred_mat_tissue_wise = np.zeros_like(pred_mat[0])
@@ -14,8 +20,37 @@ def get_tissue_wise_seg(pred_mat, tissue_type):
 
     return pred_mat_tissue_wise.astype(np.uint16)
 
+def rm_dust(pred_mat, tt):
+    pred_mat_tt = get_tissue_wise_seg(pred_mat, tt)
+    pred_mat_tt_rm_dust = cc3d.dust(pred_mat_tt, threshold=50, connectivity=26)
+    rm_dust_mask = np.logical_and(pred_mat_tt==1, pred_mat_tt_rm_dust==0)
+    pred_mat[rm_dust_mask] = 0
+    return rm_dust_mask
+
+def fill_holes(pred_mat, tt, label, rm_dust_mask):
+    pred_mat_tt = get_tissue_wise_seg(pred_mat, tt)
+    tt_holes = 1 - pred_mat_tt
+    tt_holes_rm = cc3d.dust(tt_holes, threshold=50, connectivity=26)
+    tt_filled = 1 - tt_holes_rm
+    holes_mask = np.logical_and(tt_filled==1, pred_mat==0) * rm_dust_mask
+    pred_mat[holes_mask == 1] = label
+
 def rm_dust_fh(pred_mat):
     # Receives prediction as HWD with labels for NCR, ED, ET
+
+    rm_et_mask = rm_dust(pred_mat, 'ET')
+    fill_holes(pred_mat, 'TC', 1, rm_et_mask)
+
+    rm_tc_mask = rm_dust(pred_mat, 'TC')
+    fill_holes(pred_mat, 'WT', 2, rm_tc_mask)
+
+    _ = rm_dust(pred_mat, 'WT')
+
+    rm_tc_mask = rm_dust(pred_mat)
+
+    return pred_mat
+
+def OLD_rm_dust_fh(pred_mat):
 
     pred_mat_new = pred_mat.copy()
 
@@ -49,9 +84,3 @@ def rm_dust_fh(pred_mat):
     pred_mat_new[rm_wt_mask] = 0
 
     return pred_mat_new
-
-def rm_dust(pred_mat):
-
-    pred_mat_rm_dust = cc3d.dust(pred_mat, threshold=50, connectivity=26)
-
-    return pred_mat_rm_dust

@@ -7,16 +7,17 @@ from ..datasets import brats_dataset
 from .general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
 
 def load_or_initialize_training(model, optimizer, latest_ckpt_path, train_with_val=False):
-    """
-    Load the training checkpoint if it exists, or initialize training from the beginning.
+    """Loads training checkpoint if it exists, or initializes training from scratch.
 
-    Parameters:
-    - model: The PyTorch model to be trained.
-    - optimizer: The optimizer used for training.
-    - latest_ckpt_path: The path to the latest checkpoint file.
+    Args:
+        model: The PyTorch model to be trained.
+        optimizer: The optimizer used for training.
+        latest_ckpt_path: The path to the latest model checkpoint.
+        train_with_val: If True, also returns best saved validation loss and dice. Defaults to False.
 
     Returns:
-    - epoch_start: The epoch to start training from.
+        The starting epoch number.
+        If 'train_with_val' is True, also returns best saved validation loss and dice.
     """
 
     if not os.path.exists(latest_ckpt_path):
@@ -41,6 +42,7 @@ def load_or_initialize_training(model, optimizer, latest_ckpt_path, train_with_v
     return epoch_start
 
 def make_dataloader(data_dir, shuffle, mode, batch_size=1):
+    """Creates dataloader for provided data directory."""
     dataset = brats_dataset.BratsDataset(data_dir, mode=mode)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle, num_workers=1, pin_memory=True)
     return dataloader
@@ -52,7 +54,7 @@ def exp_decay_learning_rate(optimizer, epoch, init_lr, decay_rate):
         param_group['lr'] = lr
 
 def compute_loss(output, seg, loss_functs, loss_weights):
-    # Compute weighted loss, summed across each region.
+    """Computes weighted loss between model output and ground truth, summed across each region."""
     loss = 0.
     for n, loss_function in enumerate(loss_functs):      
         temp = 0
@@ -63,7 +65,19 @@ def compute_loss(output, seg, loss_functs, loss_weights):
     return loss
 
 def train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights, training_regions):
+    """Performs one training loop of model according to given optimizer, loss functions and associated weights.
 
+    Args:
+        model: The PyTorch model to be trained.
+        optimizer: The optimizer used for training.
+        train_loader: The dataloader for training data.
+        loss_functions: List of loss functions.
+        loss_weights: List of associated weightings for each loss function.
+        training_regions: String specifying whether 'disjoint' or 'overlapping' regions will be used for training.
+
+    Returns:
+        The average training loss over the epoch.
+    """
     losses_over_epoch = []
     for _, imgs, seg in train_loader:
 
@@ -98,7 +112,20 @@ def train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights
     average_epoch_loss = np.mean(losses_over_epoch)
     return average_epoch_loss
 
+# Example parts of unet_3d model to freeze
+# 'encoder': ['Conv1', 'Conv2', 'Conv3', 'Conv4', 'Conv5', 'Conv6', 'Conv7'],
+# 'decoder': ['Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4', 'Up3', 'Up_conv3', 'Conv_1x13', 'Up2', 'Up_conv2', 'Conv_1x12', 'Up1', 'Up_conv1', 'Conv_1x11'],
+# 'middle' : ['Conv5', 'Conv6', 'Conv7', 'Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4'],
+# 'none' : [],
+# 'deep_decoder': ['Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4']
+
 def freeze_layers(model, frozen_layers):
+    """Freezes specified model layers. Afterwards parameters in these layers will not be updated when training.
+
+    Args:
+        model: The model to be trained.
+        frozen_layers: List of strings specifying model layers.
+    """
 
     for name, param in model.named_parameters():
         needs_freezing = False
@@ -111,7 +138,12 @@ def freeze_layers(model, frozen_layers):
             param.requires_grad = False
 
 def check_frozen(model, frozen_layers):
+    """Iterates through model layers and checks whether specified layers are frozen.
 
+    Args:
+        model: The model to be trained.
+        frozen_layers: List of strings specifying model layers.
+    """
     for name, param in model.named_parameters():
         needs_freezing = False
         for layer in frozen_layers:
