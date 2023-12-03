@@ -80,7 +80,7 @@ def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=
 
 if __name__ == '__main__':
 
-    from ..processing.postprocess import rm_dust_fh
+    from ..processing.postprocess import rm_dust_fh, OLD_rm_dust_fh
 
     data_dir = '/mmfs1/home/ehoney22/debug_data/test'
     ckpt_path = '/mmfs1/home/ehoney22/debug/backup_ckpts/epoch20.pth.tar'
