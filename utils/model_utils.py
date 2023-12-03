@@ -1,3 +1,5 @@
+"""This module contains utility functions for training models."""
+
 import os
 import numpy as np
 import torch
@@ -112,12 +114,6 @@ def train_one_epoch(model, optimizer, train_loader, loss_functions, loss_weights
     average_epoch_loss = np.mean(losses_over_epoch)
     return average_epoch_loss
 
-# Example parts of unet_3d model to freeze
-# 'encoder': ['Conv1', 'Conv2', 'Conv3', 'Conv4', 'Conv5', 'Conv6', 'Conv7'],
-# 'decoder': ['Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4', 'Up3', 'Up_conv3', 'Conv_1x13', 'Up2', 'Up_conv2', 'Conv_1x12', 'Up1', 'Up_conv1', 'Conv_1x11'],
-# 'middle' : ['Conv5', 'Conv6', 'Conv7', 'Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4'],
-# 'none' : [],
-# 'deep_decoder': ['Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4']
 
 def freeze_layers(model, frozen_layers):
     """Freezes specified model layers. Afterwards parameters in these layers will not be updated when training.
@@ -156,3 +152,10 @@ def check_frozen(model, frozen_layers):
                 break
             else:
                 print(f'Parameter {name} is frozen.')
+
+# Example parts of unet_3d model to freeze
+# 'encoder': ['Conv1', 'Conv2', 'Conv3', 'Conv4', 'Conv5', 'Conv6', 'Conv7'],
+# 'decoder': ['Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4', 'Up3', 'Up_conv3', 'Conv_1x13', 'Up2', 'Up_conv2', 'Conv_1x12', 'Up1', 'Up_conv1', 'Conv_1x11'],
+# 'middle' : ['Conv5', 'Conv6', 'Conv7', 'Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4'],
+# 'none' : [],
+# 'deep_decoder': ['Up6', 'Up_conv6', 'Up5', 'Up_conv5', 'Up4', 'Up_conv4']

@@ -1,3 +1,5 @@
+"""Defines common loss functions."""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -39,10 +41,9 @@ class FocalLoss(nn.Module):
         return focal_loss
 
 class NCCLoss(nn.Module):
-    '''
-    Simple implementation for Normalized Cross Correlation that can be
+    """Simple implementation for Normalized Cross Correlation that can be
     minimized with upper-bound of alpha and lower-bound of 0.
-    '''
+    """
 
     def __init__(self, alpha=1):
         super(NCCLoss, self).__init__()

@@ -1,3 +1,5 @@
+"""This module contains general functions for array manipulation, thresholding and loading and saving nifti data."""
+
 import torch
 import numpy as np
 import nibabel as nib
@@ -63,7 +65,7 @@ def disjoint_probs_to_preds(output, t=0.5):
 
     Args:
         output: Tensor of shape B3HWD. Output of model, representing probabilties each voxel belongs to each disjoint region.
-        t: Threshold value. If the channel probability for a voxel is the maximum across all channels AND greater than this threshold, channel value will be encoded as 1, otherwise 0. Defaults to 0.5.
+        t: Threshold value. If channel probability for a voxel is the maximum across all channels AND greater than this threshold, channel value will be encoded as 1, otherwise 0. Defaults to 0.5.
 
     Returns:
         Tensor of shape B3HWD, where each channel is one-hot encoding of a disjoint region.
@@ -116,7 +118,7 @@ def fetch_affine_header(subject_name, data_dir):
     return nifti.affine, nifti.header
 
 def one_hot_channels_to_three_labels(pred):
-    """Converts tensor of one-hot encodings of disjoint regions to be single channel, where each voxel is provided single disjoint region label.
+    """Converts tensor of one-hot encodings of disjoint regions to be single channel. Each voxel is assigned a single disjoint region label.
 
     Args:
         pred: Array-like of shape 3HWD, where channels are one-hot encodings of disjoint regions.

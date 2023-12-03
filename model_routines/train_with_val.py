@@ -9,7 +9,25 @@ from ..utils.model_utils import load_or_initialize_training, make_dataloader, ex
 from ..utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping, probs_to_preds
 
 def train_with_val(train_data_dir, val_data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', eval_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, val_interval=10, batch_size=1):
+    """Runs training routine with validation on separate validation set.
 
+    Args:
+        train_data_dir: Directory of training data.
+        val_data_dir: Directory of validation data.
+        model: The PyTorch model to be trained.
+        loss_functions: List of loss functions to be used for training.
+        loss_weights: List of weights corresponding to each loss function.
+        init_lr: Initial value of learning rate.
+        max_epoch: Maximum number of epochs to train for.
+        training_regions: Whether training on 'disjoint' or 'overlapping' regions. Defaults to 'overlapping'.
+        eval_regions: Whether to evaluate on 'disjoint' or 'overlapping' regions. Defaults to 'overlapping'.
+        out_dir: The directory to save model checkpoints and loss and metric values. Defaults to None.
+        decay_rate: Rate at which to decay the learning rate. Defaults to 0.995.
+        backup_interval: How often to save a backup checkpoint. Defaults to 10.
+        val_interval: How often to perform validation. Defaults to 10.
+        batch_size: Batch size of dataloader. Defaults to 1.
+    """
+    
     # Set up directories and paths.
     if out_dir is None:
         out_dir = os.getcwd()

@@ -1,3 +1,6 @@
+"""This module contains functions for preprocessing MRI images and segmentations.
+"""
+
 import numpy as np
 from skimage import exposure
 
@@ -29,7 +32,7 @@ def center_crop(img):
     return img[X_START:X_END, Y_START:Y_END, Z_START:Z_END]
 
 def undo_center_crop(input):
-    """Undoes center crop of a MRI image (or seg)."""
+    """Undos center crop of a MRI image (or seg)."""
     out = np.zeros((240, 240, 155))
     out[X_START:X_END, Y_START:Y_END, Z_START:Z_END] = input 
     return out

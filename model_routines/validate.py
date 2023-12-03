@@ -8,6 +8,16 @@ from ..utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlappi
 from ..processing.plot import plot_slices
 
 def validate(data_dir, ckpt_path, eval_regions='overlapping', out_dir=None, make_plots=False, batch_size=1):
+    """Routine to validate a trained model on validation data. Optionally plots predictions against ground truth segmentations.
+    
+    Args:
+        data_dir: Directory of validation data.
+        ckpt_path: Path of trained model.
+        eval_regions: Whether to evaluate on 'disjoint' or 'overlapping' regions. Defaults to 'overlapping'.
+        out_dir: Directory in which to save plots. Defaults to None.
+        make_plots: Whether to produce plots of predictions and ground truth segmentations. Defaults to False.
+        batch_size: Batch size of dataloader. Defaults to 1.
+    """
 
     # Set up directories.
     if out_dir is None:

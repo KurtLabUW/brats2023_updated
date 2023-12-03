@@ -1,3 +1,6 @@
+"""Contains the architecture for the baseline 3D U-Net model, based on NVIDIA's optimized U-Net.
+"""
+
 import torch
 import torch.nn as nn
 

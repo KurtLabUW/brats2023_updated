@@ -5,6 +5,15 @@ from ..utils.model_utils import make_dataloader
 from ..utils.general_utils import probs_to_preds, save_pred_as_nifti
 
 def infer(data_dir, ckpt_path, out_dir=None, batch_size=1, postprocess_function=None):
+    """Uses trained model to make predictions on test data.
+
+    Args:
+        data_dir: Directory of test data.
+        ckpt_path: Path of trained model.
+        out_dir: Directory in which to save predictions. Defaults to None.
+        batch_size: Batch size of dataloader. Defaults to 1.
+        postprocess_function: The postprocessing function to use. Defaults to None.
+    """
 
     # Set up directories and paths.
     if out_dir is None:

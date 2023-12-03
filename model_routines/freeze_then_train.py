@@ -8,6 +8,17 @@ from ..utils.model_utils import load_or_initialize_training, freeze_layers, make
 from ..utils.general_utils import seg_to_one_hot_channels, disjoint_to_overlapping
 
 def freeze_then_continue_training(data_dir, prev_ckpt_path, max_epoch, frozen_layers, out_dir=None, backup_interval=10, batch_size=1):
+    """Continues training of a model (on a potentially new training dataset) after freezing specific layers of the model.
+
+    Args:
+        data_dir: Directory of training data.
+        prev_ckpt_path: Path of previously trained model.
+        Maximum number of epochs to train for.
+        frozen_layers: List of model layers to be frozen.
+        out_dir: The directory to save model checkpoints and loss values. Defaults to None.
+        backup_interval: How often to save a backup checkpoint. Defaults to 10.
+        batch_size: Batch size of dataloader. Defaults to 1.
+    """
 
     # Set up directories and paths.
     if out_dir is None:

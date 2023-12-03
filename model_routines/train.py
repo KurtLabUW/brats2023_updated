@@ -7,7 +7,21 @@ import csv
 from ..utils.model_utils import load_or_initialize_training, make_dataloader, exp_decay_learning_rate, train_one_epoch
     
 def train(data_dir, model, loss_functions, loss_weights, init_lr, max_epoch, training_regions='overlapping', out_dir=None, decay_rate=0.995, backup_interval=10, batch_size=1):
+    """Runs basic training routine.
 
+    Args:
+        data_dir: Directory of training data.
+        model: The PyTorch model to be trained.
+        loss_functions: List of loss functions to be used for training.
+        loss_weights: List of weights corresponding to each loss function.
+        init_lr: Initial value of learning rate.
+        max_epoch: Maximum number of epochs to train for.
+        training_regions: Whether training on 'disjoint' or 'overlapping' regions. Defaults to 'overlapping'.
+        out_dir: The directory to save model checkpoints and loss values. Defaults to None.
+        decay_rate: Rate at which to decay the learning rate. Defaults to 0.995.
+        backup_interval: How often to save a backup checkpoint. Defaults to 10.
+        batch_size: Batch size of dataloader. Defaults to 1.
+    """
     # Set up directories and paths.
     if out_dir is None:
         out_dir = os.getcwd()

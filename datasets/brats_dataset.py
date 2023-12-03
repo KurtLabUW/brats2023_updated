@@ -6,6 +6,12 @@ import numpy as np
 import torch
 
 class BratsDataset(Dataset):
+    """Dataset class for loading BraTS training and test data.
+    
+    Args:
+        data_dir: Directory of training or test data.
+        mode: Either 'train' or 'test' specifying which data is being loaded.
+    """
     def __init__(self, data_dir, mode):
         self.data_dir = data_dir
         self.subject_list = os.listdir(data_dir)
@@ -14,7 +20,7 @@ class BratsDataset(Dataset):
     def __len__(self):
         return len(self.subject_list)
     
-    def load_nifti(self, subject_name, suffix):
+    def load_nifti(self, subject_name, suffix):        
         """Loads nifti file for given subject and suffix."""
 
         nifti_filename = f'{subject_name}-{suffix}.nii.gz'
@@ -23,7 +29,7 @@ class BratsDataset(Dataset):
         return nifti
     
     def load_subject_data(self, subject_name):
-        """Loads images, segmentation (if training) and extra info for a subject."""
+        """Loads images (and segmentation if in train mode) and extra info for a subject."""
 
         modalities_data = []
         for suffix in ['t1c', 't1n', 't2f', 't2w']:
