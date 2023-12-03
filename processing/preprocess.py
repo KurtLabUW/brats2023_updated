@@ -1,5 +1,4 @@
-"""This module contains functions for preprocessing MRI images and segmentations.
-"""
+"""This module contains functions for preprocessing MRI images and segmentations."""
 
 import numpy as np
 from skimage import exposure

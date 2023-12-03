@@ -1,3 +1,5 @@
+"""This module contains code for plotting MRI images alongside ground truth and predicted segmentations."""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,13 +16,13 @@ def plot_slices(images=None, seg=None, pred=None, nslice=None):
     """For a given subject, plots same slice of MRI images, ground truth and predicted segmentations, if provided.
 
     Args:
-        images (list, optional): List of MRI image tensors of shape HWD. Defaults to None.
-        seg (torch.Tensor, optional): Ground truth segmentation tensor of shape HWD. Defaults to None.
-        pred (torch.Tensor, optional): Predicted segmentation tensor of shape HWD. Defaults to None.
-        nslice (int, optional): Slice of images and segs to plot. Defaults to None.
+        images: List (one for each of the four modalities) of MRI image tensors of shape HWD. Defaults to None.
+        seg: Ground truth segmentation tensor of shape HWD. Defaults to None.
+        pred: Predicted segmentation tensor of shape HWD. Defaults to None.
+        nslice: Slice number of images and segs to plot. Defaults to None.
 
     Returns:
-        matplotlib.figure.Figure: Figure containing the plot.
+        Matplotlib figure containing the plot.
     """
     n_rows = 0
     if images is not None:
