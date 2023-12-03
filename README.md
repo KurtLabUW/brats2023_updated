@@ -43,7 +43,7 @@ python -m brats2023_updated.model_routines.train_with_val
 
 ## Contributors
 
-This research was conducted by Tianyi Ren, Ethan Honey and Harshitha Rebala under the supervision of Dr Mehmet Kurt. The code was developed by Ethan Honey and Harshitha Rebala. The updated version of the code and this repository was put together by Ethan Honey. The edge loss function code was developed by Agamdeep Chopra.
+This research was conducted by Tianyi Ren, Ethan Honey and Harshitha Rebala under the supervision of Dr Mehmet Kurt. The code was developed by Ethan Honey and Harshitha Rebala. The updated version of the code and this repository was put together by Ethan Honey. The code for the edge loss function was developed by Agamdeep Chopra.
 
 ## Acknowledgements
 
