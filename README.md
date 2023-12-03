@@ -12,7 +12,7 @@ Our team ranked in the top 10 of all those who submitted, including 7th place in
 
 ## Implementation
 
-Our baseline model is the [Optimized U-Net](https://arxiv.org/abs/2110.03352) presented by Futrega et al. from NVIDIA.
+Our baseline model is based on the [Optimized U-Net](https://arxiv.org/abs/2110.03352) presented by Futrega et al. from NVIDIA.
 
 We developed a framework of optimization techniques to boost model performance. These include:
 1. Preprocessing the MRI data with Z-score normalization and contrast rescaling.
@@ -41,9 +41,13 @@ To ensure the code runs with the relative imports working correctly, navigate ou
 python -m brats2023_updated.model_routines.train_with_val
 ```
 
+## Contributors
+
+This research was conducted by Tianyi Ren, Ethan Honey and Harshitha Rebala under the supervision of Dr Mehmet Kurt. The code was developed by Ethan Honey and Harshitha Rebala. The updated version of the code and this repository was put together by Ethan Honey. The edge loss function code was developed by Agamdeep Chopra.
+
 ## Acknowledgements
 
-We would particularly like to acknowledge the work of Futrega et al. and NVIDIA for their Optimized U-Net model that was a crucial part of our foundation, including their provided [code](https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/Segmentation/nnUNet/notebooks/BraTS22.ipynb).
+We would particularly like to acknowledge the work of Futrega et al. and NVIDIA for their Optimized U-Net model that was a crucial part of our foundation, as well as their accompanying [code](https://github.com/NVIDIA/DeepLearningExamples/blob/master/PyTorch/Segmentation/nnUNet/notebooks/BraTS22.ipynb).
 
 We acknowledge [MONAI](https://monai.io/) for their implementations of the Dice Score and 95% Hausdorff Distance metrics. We used these in our validation code.
 
@@ -58,6 +62,14 @@ Finally, we would like to acknowledge the organizers of BraTS 2023, for presenti
 - [Futrega et al. 2021. Optimized U-Net for Brain Tumor Segmentation.](https://arxiv.org/abs/2110.03352)
 - [Cardoso et al. 2022. MONAI: An open-source framework for deep learning in healthcare](https://arxiv.org/abs/2211.02701)
 - [Abderezaei et al. 2022. 3D Inception-Based TransMorph: Pre- and Post-operative Multi-contrast MRI Registration in Brain Tumors](https://arxiv.org/abs/2212.04579)
-- 
+- [Baid et al. 2021. The RSNA-ASNR-MICCAI BraTS 2021 Benchmark on Brain Tumor Segmentation and Radiogenomic Classification](https://arxiv.org/abs/2107.02314)
+- [Menze et al. 2015. "The Multimodal Brain Tumor Image Segmentation Benchmark (BRATS)," in IEEE Transactions on Medical Imaging](https://ieeexplore.ieee.org/document/6975210)
+- [Bakas et al. 2017. Advancing The Cancer Genome Atlas glioma MRI collections with expert segmentation labels and radiomic features](https://www.nature.com/articles/sdata2017117)
+- Bakas et al. 2017. Segmentation Labels and Radiomic Features for the Pre-operative Scans of the TCGA-GBM collection. The Cancer Imaging Archive.
+- Bakas et al. 2017. Segmentation Labels and Radiomic Features for the Pre-operative Scans of the TCGA-LGG collection. The Cancer Imaging Archive.
+- [Adewole et al. 2023. The Brain Tumor Segmentation (BraTS) Challenge 2023: Glioma Segmentation in Sub-Saharan Africa Patient Population (BraTS-Africa)](https://arxiv.org/abs/2305.19369)
+- [LaBella et al. 2023. The ASNR-MICCAI Brain Tumor Segmentation (BraTS) Challenge 2023: Intracranial Meningioma](https://arxiv.org/abs/2305.07642)
 
-## Contributors
+## To-do
+- Evaluate updated model performance on BraTS-GLI and BraTS-Africa
+- Produce plots of predicted segmentations for the updated model
