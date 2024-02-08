@@ -1,0 +1,16 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  An Optimization Framework for Processing and Transfer
+  Learning for the Brain Tumor Segmentation
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: 'Ethan '
+    family-names: Honey
+    email: ehoney22@uw.edu
+    affiliation: University of Washington
