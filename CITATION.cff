@@ -3,14 +3,18 @@
 
 cff-version: 1.2.0
 title: >-
-  An Optimization Framework for Processing and Transfer
+  An Optimization Framework for Processing and Transfer  
   Learning for the Brain Tumor Segmentation
 message: >-
   If you use this software, please cite it using the
   metadata from this file.
 type: software
 authors:
-  - given-names: 'Ethan '
+  - given-names: Ethan
     family-names: Honey
     email: ehoney22@uw.edu
-    affiliation: University of Washington
+  - given-names: Tianyi
+    family-names: Ren
+    email: tr1@uw.edu
+date-released: '2024-02-06'
+
