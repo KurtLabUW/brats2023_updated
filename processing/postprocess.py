@@ -58,7 +58,7 @@ def fill_holes(pred_mat, tt, label, rm_dust_mask):
 
     Args:
         pred_mat: Array of shape HWD for a predicted segmentation.
-        tissue_type: Either 'WT', 'TC' or 'ET' - the overlapping region to detect holes in.
+        tt (tissue_type): Either 'WT', 'TC' or 'ET' - the overlapping region to detect holes in.
         label: The value that holes should be relabelled to.
         rm_dust_mask: The mask corresponding to the voxels removed as dust.
     """
