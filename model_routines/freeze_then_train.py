@@ -13,7 +13,7 @@ def freeze_then_continue_training(data_dir, prev_ckpt_path, max_epoch, frozen_la
     Args:
         data_dir: Directory of training data.
         prev_ckpt_path: Path of previously trained model.
-        Maximum number of epochs to train for.
+        max_epoch: Maximum number of epochs to train for.
         frozen_layers: List of model layers to be frozen.
         out_dir: The directory to save model checkpoints and loss values. Defaults to None.
         backup_interval: How often to save a backup checkpoint. Defaults to 10.
